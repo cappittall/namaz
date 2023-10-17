@@ -5,36 +5,36 @@ pygame.init()
 
 # Constants
 # Define thresholds as dictionaries
-thresholds_men = {
-    'tekbir_distance_threshold': 0.15,
-    'kiyam_distance_threshold': 0.15,
-    'ruku_parallel_threshold': 0.1,
-    'ruku_hand_to_knee_threshold': 0.1,
-    'secde_forehead_threshold': 0.10,
-    'secde_knee_to_head_threshold': 0.2,
-    'secde_hand_to_head_threshold': 0.2,
-    'secde_hips_to_knee_threshold' : 0.2,
-    'alignment_threshold': 0.1,
-    'kade_threshold' : 0.1,
-    'wrist_to_knee_threshold' : 0.1,
-    'spine_straightness_threshold' : 0.1
+thresholds = {
+    'k': {
+            'tekbir_distance_threshold': 0.1,
+            'kiyam_distance_threshold': 0.15,
+            'ruku_head_spine_parallel_threshold': 0.10,
+            'ruku_parallel_threshold': 0.10,
+            'ruku_hand_to_knee_threshold': 0.1,
+            'secde_forehead_threshold': 0.1,
+            'secde_hand_to_head_threshold': 0.1,
+            'secde_knee_to_head_threshold': 0.1,
+            'secde_hips_to_knee_threshold': 0.1,
+            'kade_threshold': 0.1,
+            'wrist_to_knee_threshold': 0.1,
+            'spine_straightness_threshold': 0.1,
+    },
+    'e' : {
+            'tekbir_distance_threshold': 0.1,
+            'kiyam_distance_threshold': 0.15,
+            'ruku_head_spine_parallel_threshold': 0.10,
+            'ruku_parallel_threshold': 0.10,
+            'ruku_hand_to_knee_threshold': 0.1,
+            'secde_forehead_threshold': 0.1,
+            'secde_hand_to_head_threshold': 0.1,
+            'secde_knee_to_head_threshold': 0.1,
+            'secde_hips_to_knee_threshold': 0.1,
+            'kade_threshold': 0.1,
+            'wrist_to_knee_threshold': 0.1,
+            'spine_straightness_threshold': 0.1,
+    }
 }
-
-thresholds_women = {
-    'tekbir_distance_threshold': 0.15,
-    'kiyam_distance_threshold': 0.15,
-    'ruku_parallel_threshold': 0.1,
-    'ruku_hand_to_knee_threshold': 0.1,
-    'secde_forehead_threshold': 0.10,
-    'secde_knee_to_head_threshold': 0.20,
-    'secde_hand_to_head_threshold': 0.20,
-    'secde_hips_to_knee_threshold' : 0.20,
-    'alignment_threshold': 0.1,
-    'kade_threshold' : 0.1,
-    'wrist_to_knee_threshold' : 0.1,
-    'spine_straightness_threshold' : 0.1
-}
-
 last_time = 0
 min_stable_time = 1  # Time in seconds
 

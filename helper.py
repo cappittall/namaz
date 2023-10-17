@@ -46,16 +46,13 @@ def get_landmarks_infrance(img, landmarker):
     return landmarks
 
 # Choose the threshold based on gender
-def get_threshold(gender, pose):
-    if gender == "k":
-        return thresholds_women[pose]
-    else:
-        return thresholds_men[pose]
-    
-def are_aligned_vertically(gender, *args):
+def get_threshold(gender, key):
+    return thresholds.get(gender, {}).get(key, 0.1)  # Default to 0.1 if key or gender is not found
+
+def are_aligned_vertically(*args):
     y_coordinates = [point.y for point in args]
     std_dev = np.std(y_coordinates)
-    return std_dev < get_threshold(gender, 'alignment_threshold')
+    return std_dev < 0.2 
 
 # Add this class at the top of your helper.py
 class Point:

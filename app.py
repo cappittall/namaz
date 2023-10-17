@@ -206,7 +206,7 @@ class PrayerApp(Gtk.Window):
         self.sound.load(self.current_prayer_sounds.get(PrayerPositions.ALL, None))
         # Start initial sound and update the reference image when it finishes
         threading.Thread(target=self.play_sound, args=(initial_position, lambda: self.update_reference_image(self.next_position))).start()
- 
+        position_note=""
         ## Start looping 
         while self.cap.isOpened():
             ret, image = self.cap.read()
@@ -228,7 +228,7 @@ class PrayerApp(Gtk.Window):
                         position_note = "✔️ DOGRU"
                     else: position_note = "" 
                 
-                    # Write current position name on frame.
+            # Write current position name on frame.
             annotated_image = self.display_position_on_image(annotated_image, self.current_position, self.next_position, position_notes=position_note)
                                                                                 
             if self.current_position != self.previous_position and \
