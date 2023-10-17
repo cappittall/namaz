@@ -1,4 +1,9 @@
-## Namaz kılmayı öğretme aplikasyonu
+## Namaz kılmayı öğretme aplikasyonu:
+
+giriş noktası: python app.py
+
+
+
 
 env. kurduktan sonra
 

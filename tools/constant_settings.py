@@ -99,59 +99,24 @@ sabah_manazi_timeline = {
 
 sabah_dualari = {
     PrayerPositions.ALL: 'data/sounds/sabah.ogg',
-    PrayerPositions.NIYET: pygame.mixer.Sound('data/sounds/sabah-niyet-tekbir.ogg'),
-    PrayerPositions.TEKBIR: pygame.mixer.Sound('data/sounds/tekbir.mp3'),    
-    PrayerPositions.KIYAM: pygame.mixer.Sound('data/sounds/kiyam.mp3'),
-    PrayerPositions.RUKU: pygame.mixer.Sound('data/sounds/ruku.mp3'),
-    PrayerPositions.SECDE: pygame.mixer.Sound('data/sounds/secde.mp3'),
-    PrayerPositions.KADE: pygame.mixer.Sound('data/sounds/kade.mp3'),
-    PrayerPositions.RSELAM: pygame.mixer.Sound('data/sounds/rselam.mp3'),
-    PrayerPositions.LSELAM: pygame.mixer.Sound('data/sounds/lselam.mp3')
+
 }
 
 oglen_dualari = {
     PrayerPositions.ALL: 'data/sounds/sabah.ogg',
-    PrayerPositions.NIYET: pygame.mixer.Sound('data/sounds/niyet.mp3'),
-    PrayerPositions.TEKBIR: pygame.mixer.Sound('data/sounds/tekbir.mp3'),
-    PrayerPositions.KIYAM: pygame.mixer.Sound('data/sounds/kiyam.mp3'),
-    PrayerPositions.RUKU: pygame.mixer.Sound('data/sounds/ruku.mp3'),
-    PrayerPositions.SECDE: pygame.mixer.Sound('data/sounds/secde.mp3'),
-    PrayerPositions.KADE: pygame.mixer.Sound('data/sounds/kade.mp3'),
-    PrayerPositions.RSELAM: pygame.mixer.Sound('data/sounds/rselam.mp3'),
-    PrayerPositions.LSELAM: pygame.mixer.Sound('data/sounds/lselam.mp3')
+
 }
 ikindi_dualari = {
     PrayerPositions.ALL: 'data/sounds/sabah.ogg',
-    PrayerPositions.NIYET: pygame.mixer.Sound('data/sounds/niyet.mp3'),
-    PrayerPositions.TEKBIR: pygame.mixer.Sound('data/sounds/tekbir.mp3'),
-    PrayerPositions.KIYAM: pygame.mixer.Sound('data/sounds/kiyam.mp3'),
-    PrayerPositions.RUKU: pygame.mixer.Sound('data/sounds/ruku.mp3'),
-    PrayerPositions.SECDE: pygame.mixer.Sound('data/sounds/secde.mp3'),
-    PrayerPositions.KADE: pygame.mixer.Sound('data/sounds/kade.mp3'),
-    PrayerPositions.RSELAM: pygame.mixer.Sound('data/sounds/rselam.mp3'),
-    PrayerPositions.LSELAM: pygame.mixer.Sound('data/sounds/lselam.mp3')
+
 }
 aksam_dualari = {
     PrayerPositions.ALL: 'data/sounds/sabah.ogg',
-    PrayerPositions.NIYET: pygame.mixer.Sound('data/sounds/niyet.mp3'),
-    PrayerPositions.TEKBIR: pygame.mixer.Sound('data/sounds/tekbir.mp3'),
-    PrayerPositions.KIYAM: pygame.mixer.Sound('data/sounds/kiyam.mp3'),
-    PrayerPositions.RUKU: pygame.mixer.Sound('data/sounds/ruku.mp3'),
-    PrayerPositions.SECDE: pygame.mixer.Sound('data/sounds/secde.mp3'),
-    PrayerPositions.KADE: pygame.mixer.Sound('data/sounds/kade.mp3'),
-    PrayerPositions.RSELAM: pygame.mixer.Sound('data/sounds/rselam.mp3'),
-    PrayerPositions.LSELAM: pygame.mixer.Sound('data/sounds/lselam.mp3')
+
 }
 yatsi_dualari = {
     PrayerPositions.ALL: 'data/sounds/sabah.ogg',
-    PrayerPositions.NIYET: pygame.mixer.Sound('data/sounds/niyet.mp3'),
-    PrayerPositions.TEKBIR: pygame.mixer.Sound('data/sounds/tekbir.mp3'),
-    PrayerPositions.KIYAM: pygame.mixer.Sound('data/sounds/kiyam.mp3'),
-    PrayerPositions.RUKU: pygame.mixer.Sound('data/sounds/ruku.mp3'),
-    PrayerPositions.SECDE: pygame.mixer.Sound('data/sounds/secde.mp3'),
-    PrayerPositions.KADE: pygame.mixer.Sound('data/sounds/kade.mp3'),
-    PrayerPositions.RSELAM: pygame.mixer.Sound('data/sounds/rselam.mp3'),
-    PrayerPositions.LSELAM: pygame.mixer.Sound('data/sounds/lselam.mp3')
+
 }
 
 # Position to image mapping
