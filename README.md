@@ -1,3 +1,10 @@
 ## Namaz kılmayı öğretme aplikasyonu
 
-# Cihazda kurulum için 
+env. kurduktan sonra
+
+pip install -r requirements.txt
+
+### Cihazda kurulum için:
+
+sh requirements.sh
+pip install -r requirements.txt
