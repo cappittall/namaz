@@ -1,13 +1,3 @@
-'''We will control the movements of the person praying by following their movements. 
-When his hands go to his ears (earlobes), a sound file called Allahu Akbar will play. 
-Then, when he clasps his hands above his belly, he will begin reciting a new prayer audio file. 
-Then, when you go to ruku (bowing, making a Japanese style reference, etc.) a new audio file will play.
-In other words, it will follow the necessary movements in every prayer movement and perform the necessary
-prayer prayers in the necessary places.
-The important thing here is that we will need to prevent delays caused by reading the audio file by 
-pre-loading the audio files.
-'''
-
 import time
 import cv2
 
