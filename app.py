@@ -1,3 +1,4 @@
+import os
 import time
 import threading
 import cv2
@@ -19,9 +20,9 @@ PoseLandmarkerOptions = mp.tasks.vision.PoseLandmarkerOptions
 VisionRunningMode = mp.tasks.vision.RunningMode
 
 options = PoseLandmarkerOptions(num_poses=1, 
-                                min_pose_detection_confidence=0.25,
-                                min_pose_presence_confidence=0.25,
-                                min_tracking_confidence=0.25,
+                                min_pose_detection_confidence=0.35,
+                                min_pose_presence_confidence=0.35,
+                                min_tracking_confidence=0.35,
     base_options=BaseOptions(model_asset_path=model_path),
     running_mode=VisionRunningMode.IMAGE)
 
@@ -46,7 +47,7 @@ def load_squences(prayer_time):
     }
 
     current_sequence, current_prayer_sounds, timeline = sequences.get(
-                                prayer_time, (None, None))
+                                prayer_time, (None, None, None))
     
     return current_sequence, current_prayer_sounds, timeline
     
@@ -59,6 +60,17 @@ def resize_image(image, target_height, target_width):
         image = cv2.resize(image, (new_width, new_height))
     return image
 
+def empty_directory(folder_path):
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                os.rmdir(file_path)
+        except Exception as e:
+            print(f"Failed to delete {file_path}. Reason: {e}")
+            
 def resize_image_to_fixed(image, target_width, target_height):
     return cv2.resize(image, (target_width, target_height))
 
@@ -66,6 +78,7 @@ class PrayerApp(Gtk.Window):
     def __init__(self):
         super().__init__(title="Namaz Applikasyonu")
         self.fullscreen()
+        self.screen = Gdk.Display.get_default().get_monitor(0).get_geometry()      
         self.gender = None
         self.prayer_type = None
         self.set_border_width(10)
@@ -75,16 +88,16 @@ class PrayerApp(Gtk.Window):
         self.next_position = None
         
         self.check_image = False
-        self.sound = pygame.mixer.music
+
         self.sound_end_check = True
         self.namaz_timeline = None
         self.current_prayer_sounds = None
         
         # Resize the images
-        self.target_width, self.target_height = 640, 480  # Desired dimensions
+        self.target_width, self.target_height = int(self.screen.width * 0.95 / 2), int(self.screen.height * 0.8)  
         
         # Initialize camera
-        self.cap = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(0) # '/home/cappittall/Videos/namaz/namaz1.mp4')
                 
         # Initial Gender Selection Screen
         self.show_gender_buttons()
@@ -103,7 +116,7 @@ class PrayerApp(Gtk.Window):
            
             
         }
-        '''
+        '''        
         load_dynamic_css(css)
  
         box = Gtk.Box(spacing=20)
@@ -137,57 +150,135 @@ class PrayerApp(Gtk.Window):
 
     def show_prayer_type_buttons(self):
         css = '''
-        button {
+        
+        button, label {
             background: yellow;
             color: black;
             font-size: 30px;
-            margin: 10px 200px;
-            padding: 10px 50px;
+            margin: 10px 10px;
+            padding: 10px 5px;
+        }
+        
+        label#title_label {
+            font-weight: bold;
         }
         window {
             background: green;
-            
-            
         }
         '''
         load_dynamic_css(css)
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
 
-        # Add back button
-        button_back = Gtk.Button(label="GERİ")
-
-        button_back.connect("clicked", self.on_back_clicked)
-        box.pack_start(button_back, False, False, 0)
-
-        for prayer in ["Sabah", "Öğle", "İkindi", "Akşam", "Yatsı"]:
-            button = Gtk.Button(label=prayer)
-            button.set_size_request(-1, int(self.get_allocated_height() * 0.125))  # Set to half height
-            align = Gtk.Alignment(xalign=0.5, yalign=0.5)
-            align.add(button)
-            button.connect("clicked", self.on_prayer_type_selected, prayer)
-            box.add(align)
+        grid = Gtk.Grid()
+        grid.set_column_homogeneous(True)  # Make all columns same width
+        grid.set_margin_start(50)  # 50 px margin on the left
+        grid.set_margin_end(50)  # 50 px margin on the right
         
-        self.add_exit_button(box)  # Add exit button
-        self.add(box)
-        self.show_all()
+        back_button = Gtk.Button(label="Geri")
+        back_button.set_hexpand(True)  # Expand button horizontally
+        back_button.connect("clicked", lambda button: self.on_back_clicked(button, "page_1"))
 
+        exit_button = Gtk.Button(label="ÇIKIŞ")
+        exit_button.set_hexpand(True)
+        exit_button.connect("clicked", self.on_exit_clicked)
+
+        grid.attach(back_button, 0, 0, 1, 1)
+        label = Gtk.Label(label="NAMAZ SAATİNİ SEÇİNİZ")
+        label.set_hexpand(True)  # Expand label horizontally
+        label.set_name("title_label")
+        grid.attach(label, 1, 0, 4, 1)
+        grid.attach(exit_button, 5, 0, 1, 1)
+
+        prayers = ["Sabah", "Öğle", "İkindi", "Akşam", "Yatsı"]
+        for idx, prayer in enumerate(prayers, start=2):
+            button = Gtk.Button(label=prayer)
+            button.set_hexpand(True)  # Expand button horizontally
+            button.connect("clicked", self.on_prayer_type_selected, prayer)
+            grid.attach(button, 1, idx, 4, 1)  # Span entire width of the grid
+
+        self.add(grid)
+        self.show_all()
+        
+    def update_message1(self, new_text):
+        self.message_box1.set_text(new_text)
+
+    def update_message2(self, new_text):
+        self.message_box2.set_text(new_text)
+        
     def on_prayer_type_selected(self, button, prayer):
         self.prayer_type = prayer
-        self.remove(self.get_child())
-        
-        self.grid = Gtk.Grid()
-        self.add(self.grid)
-        # Gtk.Image widget to display the camera frame
-        self.cam_frame = Gtk.Image()
-        self.grid.attach(self.cam_frame, 0, 0, 1, 1)
-
-        # Gtk.Image widget to display the position to be taken next
-        self.next_position_frame = Gtk.Image()
-        self.grid.attach(self.next_position_frame, 1, 0, 1, 1)
+        self.remove(self.get_child())  # Clear existing child
         threading.Thread(target=self.run_main_code).start()
         
-    def run_main_code(self, ):
+    def run_main_code(self):
+        css = '''
+        button, label {
+            background: yellow;
+            color: black;
+            font-size: 10px;
+            margin: 5px 5px;  
+            padding: 5px 2.5px;  
 
+        }
+        label#title_label {
+            font-weight: bold;
+
+        }
+        window {
+            background: green;
+        }
+        '''
+        load_dynamic_css(css)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        grid = Gtk.Grid()
+        
+        
+        # Add Geri and ÇIKIŞ buttons
+        back_button = Gtk.Button(label="Geri")
+        #back_button.set_hexpand(True)
+        back_button.connect("clicked", lambda button: self.on_back_clicked(button, "page_2"))
+
+        exit_button = Gtk.Button(label="ÇIKIŞ")
+        #exit_button.set_hexpand(True)
+        exit_button.connect("clicked", self.on_exit_clicked)
+
+        
+        grid.attach(back_button, 0, 0, 1, 1)
+        label = Gtk.Label(label=f"{self.prayer_type.upper()} NAMAZI ")
+        label.set_hexpand(True)
+        label.set_name("title_label")
+        grid.attach(label, 1, 0, 4, 1)  # Span the label across 5 columns
+        grid.attach(exit_button, 5, 0, 1, 1)  # Shifted exit_button to column 6
+
+
+        # Image widgets
+        self.annotated_img_frame = Gtk.Image()  # Create a frame for annotated image
+        self.reference_img_frame = Gtk.Image()  # Create a frame for reference image
+
+        grid.attach(self.annotated_img_frame, 0, 1, 3, 1)  # Occupy 3 columns for annotated image
+        grid.attach(self.reference_img_frame, 3, 1, 3, 1)  # Occupy 3 columns for reference image
+
+        # Message boxes
+        self.message_box1 = Gtk.Label(label="Birinci mesaj sayfam")  
+        self.message_box2 = Gtk.Label(label="İkinci mesaj sayfam")  
+
+        grid.attach(self.message_box1, 0, 2, 3, 1)  # Occupy 3 columns for the first message
+        grid.attach(self.message_box2, 3, 2, 3, 1)  # Occupy 3 columns for the second message
+
+        main_box.pack_start(grid, True, True, 0)  # Add grid with widgets to the main box
+        main_box.set_border_width(20)
+        
+        """ back_button.set_size_request(50, 20)  # Width and height
+        exit_button.set_size_request(50, 20)
+        self.annotated_img_frame.set_size_request(250, 250)  # You can adjust based on actual image dimensions
+        self.reference_img_frame.set_size_request(250, 250)"""
+        self.message_box1.set_size_request(250, 100)
+        self.message_box2.set_size_request(250, 100) 
+
+        self.add(main_box)
+                
+        threading.Thread(target=empty_directory, args=('data/inspect/', )).start()
         current_sequence, current_prayer_sounds, namaz_timeline = load_squences(self.prayer_type)
         
         self.current_prayer_sounds = current_prayer_sounds
@@ -201,20 +292,20 @@ class PrayerApp(Gtk.Window):
             print("Namaz bitti.")
             return
         
-        self.update_reference_image(initial_position)
+        self.update_reference_image(initial_position )
 
-        self.sound.load(self.current_prayer_sounds.get(PrayerPositions.ALL, None))
+        pygame.mixer.music.load(self.current_prayer_sounds.get(PrayerPositions.ALL, None))
         # Start initial sound and update the reference image when it finishes
         threading.Thread(target=self.play_sound, args=(initial_position, lambda: self.update_reference_image(self.next_position))).start()
         position_note=""
         ## Start looping 
         while self.cap.isOpened():
             ret, image = self.cap.read()
+            
             if not ret:
                 print("Boş frame i geç ")
                 continue
             
-
             detection_result = get_landmarks_infrance(image.copy(), landmarker)
             
             # draw landmarks on image           
@@ -222,11 +313,9 @@ class PrayerApp(Gtk.Window):
                 annotated_image = draw_landmarks_on_image(image, detection_result)
                 
                 if detection_result.pose_landmarks:
-                    self.current_position = check_position(detection_result.pose_landmarks, self.gender)
+                    self.current_position = check_position(annotated_image, detection_result.pose_landmarks[0], self.gender)
                     
-                    if self.current_position == self.next_position and self.sound_end_check: 
-                        position_note = "✔️ DOGRU"
-                    else: position_note = "" 
+                    position_note  = f"Cur.Poz: {self.current_position}"
                 
             # Write current position name on frame.
             annotated_image = self.display_position_on_image(annotated_image, self.current_position, self.next_position, position_notes=position_note)
@@ -245,10 +334,12 @@ class PrayerApp(Gtk.Window):
                     break
                 
                 threading.Thread(target=self.play_sound, args=(self.next_position,)).start()
-                                
-            resized_annotated_image = resize_image_to_fixed(annotated_image, self.target_width, self.target_height)          
+           
+            # Update annotated image
+            resized_annotated_image = resize_image_to_fixed(annotated_image, self.target_width, self.target_height)
             pixbuf_annotated = self.cv2_to_gdkpixbuf(resized_annotated_image)
-            GLib.idle_add(self.cam_frame.set_from_pixbuf, pixbuf_annotated)
+            self.annotated_img_frame.set_from_pixbuf(pixbuf_annotated)               
+            """ GLib.idle_add(self.cam_frame.set_from_pixbuf, pixbuf_annotated) """
 
             self.show_all()
             while Gtk.events_pending():
@@ -272,18 +363,14 @@ class PrayerApp(Gtk.Window):
         self.sound_end_check = False
         """For timeline playlist exist from one file """
         time_period = self.namaz_timeline.get(sequence, None)        
-        if self.sound and time_period:
-            start, stop = time_period
-            self.sound.play( start = start )
-            time.sleep( stop - start )
-            self.sound.stop()
-                        
-        """ for devided music for each sequence
-        self.sound = self.current_prayer_sounds.get(sequence)        
-        if self.sound:
-            self.sound.play()
-            while pygame.mixer.get_busy():
-                pass """
+        if time_period:
+            try:
+                start, stop = time_period
+                pygame.mixer.music.play(start = start)
+                time.sleep( stop - start )
+                pygame.mixer.music.stop()
+            except Exception as e:
+                print('Hata , ', e )
             
         self.sound_end_check = True
 
@@ -295,34 +382,56 @@ class PrayerApp(Gtk.Window):
         reference_image = self.get_reference_image(next_sequence)
         resized_reference_image = resize_image_to_fixed(reference_image, self.target_width, self.target_height)
         pixbuf_reference = self.cv2_to_gdkpixbuf(resized_reference_image)
-        GLib.idle_add(self.next_position_frame.set_from_pixbuf, pixbuf_reference)
-        self.show_all() 
+        self.reference_img_frame.set_from_pixbuf(pixbuf_reference)
         
     def display_position_on_image(self, image, detected_position, next_position, position_notes=None):
         # Get the position name from the mapping
-        position_name = position_names.get(detected_position, "")
-        next_poz = position_names.get(next_position, "")
+        position_name = position_names.get(detected_position, "PozYok")
+        next_poz = position_names.get(next_position, "PozYok")
         # Put the detected position name on the image
-        cv2.putText(image, f"Poz: {position_name}", (5, 400), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 255, 0), 2)
-        cv2.putText(image, f"Nxt: {next_poz}", (5, 480), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 255, 0), 2)
+        cv2.putText(image, f"P: {position_name}", (5, 200), cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 255, 0), 4)
+        cv2.putText(image, f"N: {next_poz}", (5, 480), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 255, 0), 2)
         
         # If there are notes for the detected position, display them too
         if position_notes:
-            cv2.putText(image, position_notes, (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+            cv2.putText(image, position_notes, (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
         
         return image
     
-    def on_back_clicked(self, button):
+    def close_cap_and_sound(self,):
+        # Stop any playing sounds with Pygame
+        try:
+            pygame.mixer.music.stop()
+        except Exception as e:
+            print('Errro: ', e )
+            
+         # Release OpenCV capture
+        if hasattr(self, 'cap') and self.cap:
+            self.cap.release()
+        
+            
+    def on_back_clicked(self, button, page):
+        print('Page ', page )
+        
+        self.close_cap_and_sound()
         self.remove(self.get_child())
-        self.show_gender_buttons()
         
-    def add_exit_button(self, box):
-        button_exit = Gtk.Button(label="Çıkış")
-        button_exit.connect("clicked", self.on_exit_clicked)
-        box.pack_end(button_exit, False, False, 0)
-        
+        if page=="page_1":
+            self.show_gender_buttons()
+            
+        elif page=="page_2":
+            
+            self.show_prayer_type_buttons()
+        else:
+            self.show_gender_buttons()   
+                
     def on_exit_clicked(self, button):
+        print('Exit clicked ', hasattr(self, 'cap') )
+        self.close_cap_and_sound()
+        # Exit the application
         Gtk.main_quit()
+        print('Kapatıldı....')
+
         
 if __name__ == "__main__":
     win = PrayerApp()

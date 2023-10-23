@@ -8,6 +8,7 @@ sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get dist-upgrade
 
+jhbuild build pygobject
 sudo apt install jhbuild
 jhbuild sysdeps --install pygobject
 jhbuild sysdeps --install gtk+-3

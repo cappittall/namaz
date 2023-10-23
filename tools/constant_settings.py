@@ -5,36 +5,12 @@ pygame.init()
 
 # Constants
 # Define thresholds as dictionaries
-thresholds = {
-    'k': {
-            'tekbir_distance_threshold': 0.1,
-            'kiyam_distance_threshold': 0.15,
-            'ruku_head_spine_parallel_threshold': 0.10,
-            'ruku_parallel_threshold': 0.10,
-            'ruku_hand_to_knee_threshold': 0.1,
-            'secde_forehead_threshold': 0.1,
-            'secde_hand_to_head_threshold': 0.1,
-            'secde_knee_to_head_threshold': 0.1,
-            'secde_hips_to_knee_threshold': 0.1,
-            'kade_threshold': 0.1,
-            'wrist_to_knee_threshold': 0.1,
-            'spine_straightness_threshold': 0.1,
-    },
-    'e' : {
-            'tekbir_distance_threshold': 0.1,
-            'kiyam_distance_threshold': 0.15,
-            'ruku_head_spine_parallel_threshold': 0.10,
-            'ruku_parallel_threshold': 0.10,
-            'ruku_hand_to_knee_threshold': 0.1,
-            'secde_forehead_threshold': 0.1,
-            'secde_hand_to_head_threshold': 0.1,
-            'secde_knee_to_head_threshold': 0.1,
-            'secde_hips_to_knee_threshold': 0.1,
-            'kade_threshold': 0.1,
-            'wrist_to_knee_threshold': 0.1,
-            'spine_straightness_threshold': 0.1,
-    }
-}
+thresholds_xs= 0.01
+thresholds_s = 0.05
+thresholds_m = 0.10
+thresholds_l = 0.15
+thresholds_xl = 0.20
+
 last_time = 0
 min_stable_time = 1  # Time in seconds
 
