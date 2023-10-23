@@ -2,6 +2,7 @@ opencv-python-headless
 mediapipe
 pillow
 pygame
+pyproject
 PyGObject
 
 
