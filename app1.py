@@ -1,7 +1,6 @@
 import os
 import time
 import threading
-import traceback
 import cv2
 from PIL import Image
 import gi
@@ -11,17 +10,9 @@ import mediapipe as mp
 # initialize Gtk
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GdkPixbuf, GLib
-
-from tflite_runtime.interpreter import load_delegate, Interpreter
-# from tensorflow.lite.python.interpreter import Interpreter, load_delegate
-
-import pygame.mixer
-
-pygame.mixer.init()
-
+import psutil
 # Initialize Pose and audio
-model_path = 'models/all/pose_landmarker_full.task'
-model_path_edgetpu = 'models/all/namazV2_E0_fp16.tflite'
+model_path = 'models/mp/pose_landmarker_full.task'
 
 BaseOptions = mp.tasks.BaseOptions
 PoseLandmarker = mp.tasks.vision.PoseLandmarker
@@ -69,7 +60,7 @@ def resize_image(image, target_height, target_width):
         image = cv2.resize(image, (new_width, new_height))
     return image
 
-def clear_directory(folder_path):
+def empty_directory(folder_path):
     for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
         try:
@@ -87,7 +78,7 @@ class PrayerApp(Gtk.Window):
     def __init__(self):
         super().__init__(title="Namaz Applikasyonu")
         self.fullscreen()
-          
+        self.screen = Gdk.Display.get_default().get_monitor(0).get_geometry()      
         self.gender = None
         self.prayer_type = None
         self.set_border_width(10)
@@ -103,29 +94,13 @@ class PrayerApp(Gtk.Window):
         self.current_prayer_sounds = None
         
         # Resize the images
-        self.screen = Gdk.Display.get_default().get_monitor(0).get_geometry()    
         self.target_width, self.target_height = int(self.screen.width * 0.95 / 2), int(self.screen.height * 0.8)  
         
         # Initialize camera
         self.cap = cv2.VideoCapture(2) # '/home/cappittall/Videos/namaz/namaz1.mp4')
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.target_width)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.target_height)
-        self.cap.set(cv2.CAP_PROP_FPS, 30) 
-
-        # Inıt interpreter
-        print('Burda...2')
-        self.interpreter = Interpreter(
-                    model_path=str(model_path_edgetpu),
-                    experimental_delegates=[load_delegate('libedgetpu.so.1')]
-                    )
-        print('Burda...3')
-        self.interpreter.allocate_tensors()
-        self.input_details = self.interpreter.get_input_details()
-        self.output_details = self.interpreter.get_output_details()
-        
+                
         # Initial Gender Selection Screen
         self.show_gender_buttons()
-        
 
     def show_gender_buttons(self):
         css = '''
@@ -233,82 +208,7 @@ class PrayerApp(Gtk.Window):
     def on_prayer_type_selected(self, button, prayer):
         self.prayer_type = prayer
         self.remove(self.get_child())  # Clear existing child
-        # threading.Thread(target=self.run_main_code()).start()
-        self.run_main_code()
-    
-    def capture_camera(self,):
-        
-        ## Start looping 
-        while self.cap.isOpened():
-            ret, image = self.cap.read()
-            
-            if not ret:
-                continue
-            try: 
-                detection_result = get_landmarks_infrance(image.copy(), landmarker)
-                # draw landmarks on image           
-                if detection_result:
-                    annotated_image = draw_landmarks_on_image(image.copy(), detection_result)
-                    
-                    if detection_result.pose_landmarks:
-                        landmarks = detection_result.pose_landmarks[0]
-                        bbox = get_bounding_box(landmarks, image)
-                        start = time.monotonic()
-                        # get current position
-                        self.current_position = check_position(image.copy(), landmarks, self.gender)
-                        
-                        # crop image in order to classify position
-                        croped_image = image[bbox[1]:bbox[3], bbox[0]:bbox[2]]
-                                                
-                        det_time = (time.monotonic() - start)*1000
-                        start = time.monotonic()
-                        clasfy_result, conf = get_class_of_position_fp16(croped_image, self.interpreter, self.input_details, self.output_details)
-                        
-                        # print(f'Det time - pose:{det_time:.2f} -  tflite_edge: {(time.monotonic() - start ) * 1000 :.2f} ')
-                  
-                        # consider if confidence > 70% 
-                        if conf > 0.7:
-                            if clasfy_result == "secde":
-                                self.current_position = PrayerPositions.SECDE
-                            yzmodel_rez = f'{clasfy_result} {int(conf*100)}%' 
-                            args = {'args': f'{clasfy_result} {int(conf*100)}%' }
-                            threading.Thread(target=write_inspection_on_image, args=(croped_image,args,)).start()
-                                                       
-                        else:
-                            yzmodel_rez = ''
-
-                        # Write current position name on frame.
-                        position_note  = f"CP_{self.current_position}{self.counter}/{len(self.current_sequence)}- {yzmodel_rez} "
-                        annotated_image = self.display_position_on_image(annotated_image, self.current_position, self.next_position, position_notes=position_note)
-           
-            except Exception as e:
-                print("Exception: ", e)
-                traceback.print_exc()
-                                                 
-            if ((self.current_position != self.previous_position and \
-                self.current_position == self.next_position and \
-                self.current_position is not None) or \
-                self.next_position==PrayerPositions.LRSELAM)  and self.sound_end_check :
-                        
-                self.previous_position = self.current_position                       
-                try:
-                    self.next_position = next(self.position_iterator)
-                    self.counter += 1
-                    if self.sound_end_check:
-                        print('Yeni ses çalacak - ', )
-                        threading.Thread(target=self.play_sound, args=(self.current_position, lambda: self.update_reference_image(self.next_position))).start()
-                except StopIteration:
-                    self.on_exit_clicked()
-
-            # Update annotated image                
-            start = time.monotonic()
-            resized_annotated_image = resize_image_to_fixed(annotated_image, self.target_width, self.target_height)
-            
-            GLib.idle_add(self.update_image, resized_annotated_image)
-        
-    def update_image(self, img):
-        self.annotated_img_frame.set_from_pixbuf(self.cv2_to_gdkpixbuf(img))
-        self.show_all()
+        threading.Thread(target=self.run_main_code).start()
         
     def run_main_code(self):
         css = '''
@@ -360,8 +260,8 @@ class PrayerApp(Gtk.Window):
         grid.attach(self.reference_img_frame, 3, 1, 3, 1)  # Occupy 3 columns for reference image
 
         # Message boxes
-        self.message_box1 = Gtk.Label(label="Birinci mesaj ")  
-        self.message_box2 = Gtk.Label(label="İkinci mesaj ")  
+        self.message_box1 = Gtk.Label(label="Birinci mesaj sayfam")  
+        self.message_box2 = Gtk.Label(label="İkinci mesaj sayfam")  
 
         grid.attach(self.message_box1, 0, 2, 3, 1)  # Occupy 3 columns for the first message
         grid.attach(self.message_box2, 3, 2, 3, 1)  # Occupy 3 columns for the second message
@@ -377,21 +277,17 @@ class PrayerApp(Gtk.Window):
         self.message_box2.set_size_request(250, 100) 
 
         self.add(main_box)
-        
-        # clear inspect directory 
-        clear_directory('data/inspect/')
-        
-        self.current_sequence, current_prayer_sounds, namaz_timeline = load_squences(self.prayer_type)
+                
+        threading.Thread(target=empty_directory, args=('data/inspect/', )).start()
+        current_sequence, current_prayer_sounds, namaz_timeline = load_squences(self.prayer_type)
         
         self.current_prayer_sounds = current_prayer_sounds
         self.namaz_timeline = namaz_timeline
         
-        self.position_iterator = iter(self.current_sequence)
-        self.counter = 0
+        position_iterator = iter(current_sequence)
         try:
-            initial_position = next(self.position_iterator)
-            self.next_position = next(self.position_iterator)
-            self.counter += 1 
+            initial_position = next(position_iterator)
+            self.next_position = next(position_iterator)
         except StopIteration:
             print("Namaz bitti.")
             return
@@ -399,16 +295,56 @@ class PrayerApp(Gtk.Window):
         self.update_reference_image(initial_position )
 
         pygame.mixer.music.load(self.current_prayer_sounds.get(PrayerPositions.ALL, None))
-        print('Ses dosyası yüklendi...')
-
         # Start initial sound and update the reference image when it finishes
-        threading.Thread(target= self.play_sound, args=(initial_position, lambda: self.update_reference_image(self.next_position),)).start()
-        
-        # Start the camera capture in a new thread
-        camera_thread = threading.Thread(target=self.capture_camera )
-        camera_thread.daemon = True
-        camera_thread.start()
-                              
+        threading.Thread(target=self.play_sound, args=(initial_position, lambda: self.update_reference_image(self.next_position))).start()
+        position_note=""
+        ## Start looping 
+        while self.cap.isOpened():
+            ret, image = self.cap.read()
+            cpu_percent = psutil.cpu_percent(interval=1)
+            
+            if not ret:
+                print("Boş frame i geç ")
+                continue
+            
+            detection_result = get_landmarks_infrance(image.copy(), landmarker)
+            
+            # draw landmarks on image           
+            if detection_result:
+                annotated_image = draw_landmarks_on_image(image.copy(), detection_result)
+                
+                if detection_result.pose_landmarks:
+                    self.current_position = check_position(annotated_image.copy(), detection_result.pose_landmarks[0], self.gender)
+                    
+                    position_note  = f"Cp: {self.current_position} {cpu_percent}%"
+                
+            # Write current position name on frame.
+            annotated_image = self.display_position_on_image(annotated_image, self.current_position, self.next_position, position_notes=position_note)
+                                                                                
+            if self.current_position != self.previous_position and \
+                    self.current_position == self.next_position and \
+                    self.current_position is not None and self.sound_end_check:
+                        
+                self.previous_position = self.current_position    
+                                         
+                try:
+                    self.next_position = next(position_iterator)
+                    self.update_reference_image(self.next_position)
+                except StopIteration:
+                    print("Sequence completed.")
+                    break
+                
+                threading.Thread(target=self.play_sound, args=(self.next_position,)).start()
+           
+            # Update annotated image
+            resized_annotated_image = resize_image_to_fixed(annotated_image, self.target_width, self.target_height)
+            pixbuf_annotated = self.cv2_to_gdkpixbuf(resized_annotated_image)
+            self.annotated_img_frame.set_from_pixbuf(pixbuf_annotated)               
+            """ GLib.idle_add(self.cam_frame.set_from_pixbuf, pixbuf_annotated) """
+
+            self.show_all()
+            while Gtk.events_pending():
+                Gtk.main_iteration()                           
             
     def cv2_to_gdkpixbuf(self, cv2_image):
         image = Image.fromarray(cv2.cvtColor(cv2_image, cv2.COLOR_BGR2RGB))
@@ -434,24 +370,20 @@ class PrayerApp(Gtk.Window):
                 pygame.mixer.music.play(start = start)
                 time.sleep( stop - start )
                 pygame.mixer.music.stop()
-                self.sound_end_check = True
             except Exception as e:
                 print('Hata , ', e )
+            
+        self.sound_end_check = True
 
         if callback:
             callback()
-        return 
         
     def update_reference_image(self, next_sequence):
-        start = time.monotonic()
+        
         reference_image = self.get_reference_image(next_sequence)
         resized_reference_image = resize_image_to_fixed(reference_image, self.target_width, self.target_height)
         pixbuf_reference = self.cv2_to_gdkpixbuf(resized_reference_image)
         self.reference_img_frame.set_from_pixbuf(pixbuf_reference)
-        print(f'Ref image time: {int((time.monotonic() - start)*1000)}')
-        return
-    
-        
         
     def display_position_on_image(self, image, detected_position, next_position, position_notes=None):
         # Get the position name from the mapping
@@ -463,7 +395,7 @@ class PrayerApp(Gtk.Window):
         
         # If there are notes for the detected position, display them too
         if position_notes:
-            cv2.putText(image, position_notes, (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1.5 , (0, 0, 255), 4)
+            cv2.putText(image, position_notes, (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
         
         return image
     
@@ -507,4 +439,3 @@ if __name__ == "__main__":
     win.connect("destroy", Gtk.main_quit)
     win.show_all()
     Gtk.main()
-

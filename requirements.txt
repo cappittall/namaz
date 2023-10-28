@@ -1,9 +1,6 @@
-opencv-python-headless
-mediapipe
-pillow
-pygame
-pyproject
-PyGObject
-
-
-
+opencv-python-headless==4.8.1.78
+mediapipe==0.10.7
+pillow==10.1.0
+pygame==2.5.2
+PyGObject==3.46.0
+tflite-runtime==2.14.0

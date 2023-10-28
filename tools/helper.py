@@ -2,21 +2,19 @@ import logging
 import math
 import time
 import cv2
-import pygame
 import numpy as np
 
-from tools.constant_settings import * 
+from .constant_settings import * 
 
 from mediapipe.framework.formats import landmark_pb2
 from mediapipe import solutions
 import mediapipe as mp
 import threading
 from concurrent.futures import ThreadPoolExecutor
-thread_pool = ThreadPoolExecutor(max_workers=10)
 
-        
-# Kade treshold
-pygame.init()
+thread_pool = ThreadPoolExecutor(max_workers=10)
+# Labels corresponding to the output of your model, assumed to be in order
+labels = ['kade', 'kiyam', 'ruku', 'secde']
 
 def draw_landmarks_on_image(rgb_image, detection_result ):
         
@@ -51,6 +49,91 @@ def get_landmarks_infrance(img, landmarker):
         return None
     return landmarks
 
+def get_bounding_box(landmarks, img):
+    margin_ratio_x = 0.5
+    margin_ratio_y = 0.5
+    
+    x_coords = [landmark.x for landmark in landmarks]
+    y_coords = [landmark.y for landmark in landmarks]
+    
+    x_min, x_max, y_min, y_max = min(x_coords), max(x_coords), min(y_coords), max(y_coords)
+
+    
+    h,w,_ = img.shape 
+    x_min, y_min, x_max, y_max = int(x_min * w), int(y_min * h),int(x_max * w), int(y_max* h)
+                                                
+    margin_x = int((x_max - x_min) * margin_ratio_x)
+    margin_y = int((y_max - y_min) * margin_ratio_y)
+    # Make sure the margins do not exceed the image dimensions
+    x_min = max(0, x_min - margin_x)
+    y_min = max(0, y_min - margin_y)
+    x_max = min(w, x_max + margin_x)
+    y_max = min(h, y_max + margin_y)
+            
+    return (x_min, y_min, x_max, y_max)
+
+def get_class_of_position_fp16(image, interpreter, input_details, output_details):
+    # This part remains the same
+    input_size = tuple(input_details[0]['shape'][1:3])
+    
+    img_array = np.array(image)
+
+    # Resize and normalize image if needed
+    img_array = cv2.resize(img_array, input_size)
+    img_array = img_array.astype(np.float32) / 255.0
+
+    # Add a batch dimension
+    img_array = np.expand_dims(img_array, axis=0)
+
+    # Set input tensor
+    interpreter.set_tensor(input_details[0]['index'], img_array)
+
+    # Invoke model
+    interpreter.invoke()
+
+    # Get output tensor
+    output_data = interpreter.get_tensor(output_details[0]['index'])
+    
+    confidence = np.max(output_data)   
+
+    # Determine label
+    label = labels[np.argmax(output_data)]
+    
+    return label, confidence
+
+
+def get_class_of_position(image, interpreter, input_details, output_details):   
+    # This part remains the same
+    input_size = tuple(input_details[0]['shape'][1:3])
+    
+    img_array = np.array(image)
+    
+    img_array = cv2.resize(img_array, input_size)
+    
+
+    scale, zero_point = input_details[0]['quantization']
+    img_array = np.uint8(img_array / scale + zero_point)
+    img_array = np.expand_dims(img_array, axis=0)
+
+    # Set input tensor
+    interpreter.set_tensor(input_details[0]['index'], img_array)
+
+    # Invoke model
+    interpreter.invoke()
+
+    # Get output tensor
+    output_data = interpreter.get_tensor(output_details[0]['index'])
+    print(output_data)
+    
+    confidence = np.max(output_data)
+    print(f'bag >> conf: {int(confidence * 100)}% ', output_data , np.argmax(output_data), input_size )
+    
+    # Determine label
+    label = labels[np.argmax(output_data)]
+        
+    return label, confidence
+
+    
 def are_aligned_vertically(*args):
     x_coordinates = [point.x for point in args]
     std_dev = np.std(x_coordinates)
@@ -84,15 +167,15 @@ def is_reliable_landmark(landmark, min_visibility=0.20 ):
     return landmark.visibility >= min_visibility
 
 def is_strait(landmarks):
-    if not all([is_reliable_landmark(landmarks[l]) for l in [21, 22, 23, 24, 25, 26, 27, 28 ]]):
-        return False
+    if not all([is_reliable_landmark(landmarks[l]) for l in [23, 24, 25, 26, 27, 28 ]]):
+        return None
     
     st_dev1 = are_aligned_vertically(landmarks[27], landmarks[25], landmarks[23])
     st_dev2 = are_aligned_vertically(landmarks[28], landmarks[26], landmarks[24])
     st_dev = (st_dev1 + st_dev2) / 2.0 
     
-    is_standing_l = landmarks[23].y < landmarks[25].y < landmarks[27].y
-    is_standing_r = landmarks[24].y < landmarks[26].y < landmarks[28].y
+    is_standing_l =  landmarks[23].y < landmarks[25].y < landmarks[27].y
+    is_standing_r =  landmarks[24].y < landmarks[26].y < landmarks[28].y
     
     if st_dev <= thresholds_xs and is_standing_l and is_standing_r:
         return True
@@ -101,6 +184,9 @@ def is_strait(landmarks):
 
 
 def is_niyet(image, landmarks, gender="k"):
+    # check the landmarks reliable  checked already [23, 24, 25, 26, 27, 28 ]
+    if not all([is_reliable_landmark(landmarks[l]) for l in [19,20]]):
+        return None
     
     # calculate hands are under bell
     left_hand_under_bell = landmarks[19].y > landmarks[23].y
@@ -110,9 +196,9 @@ def is_niyet(image, landmarks, gender="k"):
 
 def is_tekbir(image, landmarks, gender="k"):
    
-    # Check if landmarks are reliable. Done above: [21, 22, 23, 24, 25, 26, 27, 28] 
-    if not all([is_reliable_landmark(landmarks[l]) for l in [7, 8, 11, 12 ]]):
-        return False
+    # Check if landmarks are reliable. checked already [23, 24, 25, 26, 27, 28 ] 
+    if not all([is_reliable_landmark(landmarks[l]) for l in [7, 8, 11, 12, 19, 20, 21, 22]]):
+        return None
     
     inspections = {}
     if gender=="k":
@@ -142,16 +228,16 @@ def is_tekbir(image, landmarks, gender="k"):
     if _is_tekbir:
         print('Tekbir ',  inspections )
         # threading.Thread(target=write_inspection_on_image, args=(image, inspections, ) ).start()
-        thread_pool.submit(write_inspection_on_image, image, inspections)
+        # thread_pool.submit(write_inspection_on_image, image, inspections)
         return True
 
     return False
 
 def is_kiyam(image, landmarks, gender='k' ):    
     
-    # Check if landmarks are reliable. Done above = [21, 22, 23, 24, 25, 26, 27, 28] 
-    if not all([is_reliable_landmark(landmarks[l]) for l in [11, 12, 19, 20]]):
-        return False
+    # Check if landmarks are reliable. checked already [23, 24, 25, 26, 27, 28 ] 
+    if not all([is_reliable_landmark(landmarks[l]) for l in [11, 12, 19, 20, 21, 22]]):
+        return None
              
     inspections = {}
     # Estimate chest and stomach Y positions 
@@ -189,7 +275,7 @@ def is_kiyam(image, landmarks, gender='k' ):
     if _is_kiyam:
         print('Kıyam ',  inspections )
         # threading.Thread(target=write_inspection_on_image, args=(image, inspections, ) ).start()
-        thread_pool.submit(write_inspection_on_image, image, inspections)
+        # thread_pool.submit(write_inspection_on_image, image, inspections)
         
         return True
     
@@ -198,112 +284,125 @@ def is_kiyam(image, landmarks, gender='k' ):
 def is_ruku(image, landmarks, gender="k"):
     inspections = {}
     
-    # Check if landmarks are reliable. Done above = [23, 24, 25, 26, 27, 28] 
-    if not all([is_reliable_landmark(landmarks[l]) for l in [11, 12, 15, 16]]):
-        return False
+    # Check if landmarks are reliable. checked already [23, 24, 25, 26, 27, 28 ] 
+    if not all([is_reliable_landmark(landmarks[l]) for l in [0, 11, 12, 15, 16]]):
+        return None
 
     # mid points of sholder and hips
     mid_spine_y = (landmarks[11].y + landmarks[12].y) / 2   
     
-    # check mouth below solderline
+    # check mouth below sholderline
     distance_noise_spine = landmarks[0].y - mid_spine_y
 
     # calculate hands are under bell
     is_hands_under_bell = landmarks[15].y > landmarks[23].y and landmarks[16].y > landmarks[24].y
-    is_distance_noise_spine = landmarks[0].y >= mid_spine_y
+    is_distance_noise_spine = landmarks[0].y >= mid_spine_y - thresholds_s
             
-    # Check alignment of spine, hips, knees, and ankles to ensure a bowing posture    
-    inspections['noso_to_spine'] = is_distance_noise_spine
+    # Check alignment of spine, hips, knees, and ankles to ensure a bowing posture
+    inspections['Ruku'] = is_distance_noise_spine
+    inspections['dist'] = distance_noise_spine
     inspections['hans_U'] = is_hands_under_bell
-    inspections['dt_nose_spn'] = str(distance_noise_spine)[:5]
+    inspections['dtns'] = str(distance_noise_spine)[:5]
        
     if is_distance_noise_spine and is_hands_under_bell:
         print('Ruku ',  inspections )
         # threading.Thread(target=write_inspection_on_image, args=(image, inspections, ) ).start()
-        thread_pool.submit(write_inspection_on_image, image, inspections)
+        # thread_pool.submit(write_inspection_on_image, image, inspections)
         return True
     
     return False
 
-def is_secde(image, landmarks, gender="k"):
-    inspections = {}
-    # Check if landmarks are reliable
-    if not all([is_reliable_landmark(landmarks[l]) for l in [0,15,16, 23, 24, 25,26, 27,28 ] ]):
-        return False
-    
-    nose_y = landmarks[0].y
-    left_wrist_y = landmarks[15].y
-    right_wrist_y = landmarks[16].y
-    left_knee_y = landmarks[25].y
-    right_knee_y = landmarks[26].y
-    left_ankle_y = landmarks[27].y
-    right_ankle_y = landmarks[28].y
-    
-    left_hip_y = landmarks[23].y
-    right_hip_y = landmarks[24].y
-    
-    left_check = left_hip_y <= nose_y and left_hip_y <= left_wrist_y \
-        and left_hip_y <= left_knee_y and left_hip_y <= left_ankle_y 
-        
-    right_check = right_hip_y<= nose_y and right_hip_y <= right_wrist_y \
-        and right_hip_y <= right_knee_y and right_hip_y <= right_ankle_y  
-        
-    final_check = left_check or right_check
-    
-    inspections['Secde'] = final_check
-    inspections['hips, '] = str(left_hip_y)[:5] 
-    inspections['Nose'] = str(nose_y)[:5] 
-    inspections['el'] = str(left_wrist_y)[:5] 
-    inspections['Diz'] = str(left_knee_y)[:5] 
-    inspections['Ayak'] = str(left_ankle_y)[:5] 
-    
-    print('Secde ',  inspections )
-    if final_check:
-        print('Secde ',  inspections )
-        # threading.Thread(target=write_inspection_on_image, args=(image, inspections, ) ).start()
-        thread_pool.submit(write_inspection_on_image, image, inspections)
-        
-        return True
-    
-    return False
 
 def is_kade(image, landmarks, gender="k"):
     
     inspections = {}
     # Check if landmarks are reliable
-    if not all([is_reliable_landmark(landmarks[l]) for l in [0,15,16, 23, 24, 25,26, 27,28 ] ]):
-        return False
+    if not all([is_reliable_landmark(landmarks[l]) for l in [0,11, 12, 15,16, 19,20, 23, 24, 25, 26, 27, 28 ] ]):
+        return None
     
-    left_hip_to_ankle = calculate_distance(landmarks[23], landmarks[27]) 
+    nose_y = landmarks[0].y
+    wrists_y = (landmarks[15].y + landmarks[16].y) /2
+    knees_y = (landmarks[25].y + landmarks[26].y) /2
+
+    ankles_y = (landmarks[27].y + landmarks[28].y) /2
+    sholders_y = (landmarks[11].y + landmarks[12].y) /2
+ 
+    
+    hips_y = (landmarks[23].y +landmarks[24].y ) /2 
+    
+    left_hips_to_ankle = calculate_distance(landmarks[23], landmarks[27]) 
     right_hip_to_ankle = calculate_distance(landmarks[24], landmarks[28])
+    hips_to_ankles = (left_hips_to_ankle + right_hip_to_ankle) / 2 
     
     left_hand_to_knee = calculate_distance(landmarks[19], landmarks[25])
     right_hand_to_knee = calculate_distance(landmarks[20], landmarks[26])
         
     
     # Check hips, sholders and ears are vertical
-    is_vertical = landmarks[0].y < landmarks[12].y < landmarks[24].y < landmarks[28].y
-    is_hips_to_ankles = left_hip_to_ankle < thresholds_s and right_hip_to_ankle < thresholds_s
-    is_hands_on_knees =  left_hand_to_knee < thresholds_s and right_hand_to_knee < thresholds_s
+    is_vertical = nose_y < sholders_y < hips_y < ankles_y
+                    
+                    
+    # check ankles are close to hips
+    is_hips_to_ankles = hips_to_ankles < thresholds_l 
+    
+    # check hands are on knees
+    is_hands_on_knees =  left_hand_to_knee < thresholds_l and right_hand_to_knee < thresholds_l
                             
     is_kade_pos = is_vertical and is_hips_to_ankles and is_hands_on_knees
     
     
     inspections['Kade'] = is_kade_pos
-    inspections['hipL'] = str(left_hip_to_ankle)[:5] # Hips Ankles 
-    inspections['hipR'] = str(right_hip_to_ankle)[:5] # Hips Ankles 
+    inspections['hps_anks'] = str(hips_to_ankles)[:5] # Hips Ankles 
     inspections['HandL'] = str(left_hand_to_knee)[:5] # Left hand on knee
     inspections['HandR']= str(right_hand_to_knee)[:5] # Right hand on knee
     inspections['kr']= is_vertical # Vertical
     
-    print('Kade ',  inspections )
+    
     if is_kade_pos:
+        print('Kade ',  inspections )
         # threading.Thread(target=write_inspection_on_image, args=(image, inspections, ) ).start()
-        thread_pool.submit(write_inspection_on_image, image, inspections)
+        # thread_pool.submit(write_inspection_on_image, image, inspections)
         return True
     
     return False
+
+def is_secde(image, landmarks, gender="k"):
+    inspections = {}
+    # Check if landmarks are reliable 
+    if not all([is_reliable_landmark(landmarks[l]) for l in [0,15,16, 23, 24, 25,26, 27,28 ] ]):
+        return None
     
+    nose_y = landmarks[0].y
+    wrists_y = (landmarks[15].y + landmarks[16].y) / 2
+    wrists_x = (landmarks[15].x + landmarks[16].x) / 2
+    knees_y = (landmarks[25].y + landmarks[26].y) / 2
+    ankles_y = (landmarks[27].y + landmarks[28].y) / 2
+    sholders_y = (landmarks[11].y + landmarks[12].y) / 2
+    hips_y = (landmarks[23].y +landmarks[24].y ) / 2 
+
+   
+    # whether if nose is below sholders 
+    
+    nose_to_left_hand = calculate_distance(landmarks[0], landmarks[15] )
+    nose_to_right_hand = calculate_distance(landmarks[0], landmarks[16] )
+    nose_to_hands = (nose_to_left_hand + nose_to_right_hand) / 2
+    
+    final_check = sholders_y >= hips_y or nose_to_hands <= thresholds_m 
+    
+    inspections['Secde'] = final_check
+    inspections['hips, '] = str(hips_y)[:5] 
+    inspections['Nose'] = str(nose_y)[:5] 
+    inspections['el'] = str(wrists_y)[:5] 
+    inspections['Diz'] = str(knees_y)[:5] 
+    inspections['Ayak'] = str(ankles_y)[:5] 
+        
+    # print('Secde ',  inspections )
+    print('Secde ',  inspections )
+    if final_check:
+        threading.Thread(target=write_inspection_on_image, args=(image, inspections, ) ).start()
+        # thread_pool.submit(write_inspection_on_image, image, inspections)
+        return True
+    return False  
 
 def check_position(image, landmarks, gender):
         
@@ -325,11 +424,27 @@ def check_position(image, landmarks, gender):
             return None
         
     else:
-
-        if is_secde(image, landmarks, gender):
-            return PrayerPositions.SECDE
-        elif is_kade(image, landmarks, gender):
+        if is_kade(image, landmarks, gender):
             return PrayerPositions.KADE
+        
+        elif is_secde(image, landmarks, gender):
+            return PrayerPositions.SECDE
+
         else:
             return None
         
+
+def preprocess_image(image_path, target_size=(224, 224)):
+    # Read the image from the path
+    image = cv2.imread(image_path)
+    
+    # Resize the image
+    image = cv2.resize(image, target_size)
+    
+    # Convert BGR image to RGB
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    
+    # Normalize the image pixels
+    image = image / 255.0
+    
+    return image

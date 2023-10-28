@@ -1,0 +1,7 @@
+models/
+data/
+
+!models/all
+!data/sounds
+!data/inspect/
+!data/position_images

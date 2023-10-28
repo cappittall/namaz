@@ -1,7 +1,5 @@
 
-from tools.prayer_positions import PrayerPositions
-import pygame
-pygame.init()
+from .prayer_positions import PrayerPositions
 
 # Constants
 # Define thresholds as dictionaries
@@ -13,42 +11,44 @@ thresholds_xl = 0.20
 
 last_time = 0
 min_stable_time = 1  # Time in seconds
-
+# sabah namazı position order
 sabah_namazi_2 =  [
-    PrayerPositions.NIYET, PrayerPositions.TEKBIR,
-    PrayerPositions.KIYAM, 
-    PrayerPositions.RUKU, PrayerPositions.SECDE, 
+    PrayerPositions.NIYET, PrayerPositions.TEKBIR, PrayerPositions.KIYAM, 
+    PrayerPositions.RUKU, PrayerPositions.NIYET, PrayerPositions.SECDE, 
     PrayerPositions.KADE, PrayerPositions.SECDE, PrayerPositions.KIYAM, 
-    PrayerPositions.RUKU, PrayerPositions.SECDE, 
+    PrayerPositions.RUKU, PrayerPositions.NIYET, PrayerPositions.SECDE, 
     PrayerPositions.KADE, PrayerPositions.SECDE, PrayerPositions.KADE, 
-    PrayerPositions.RSELAM, PrayerPositions.LSELAM
+    PrayerPositions.LRSELAM, PrayerPositions.SON
 ]
 
 oglen_namazi_4 = [
     PrayerPositions.NIYET, PrayerPositions.TEKBIR, PrayerPositions.KIYAM, PrayerPositions.RUKU, 
-    PrayerPositions.SECDE, PrayerPositions.KADE, PrayerPositions.SECDE, PrayerPositions.KIYAM, 
-    PrayerPositions.RUKU,  PrayerPositions.SECDE,PrayerPositions.KADE, 
-    PrayerPositions.SECDE,PrayerPositions.KADE, PrayerPositions.KIYAM, PrayerPositions.RUKU, 
-    PrayerPositions.SECDE, PrayerPositions.KADE, PrayerPositions.SECDE, 
-    PrayerPositions.KIYAM, PrayerPositions.RUKU, PrayerPositions.SECDE,
-    PrayerPositions.KADE, PrayerPositions.SECDE,PrayerPositions.KADE, 
-    PrayerPositions.RSELAM, PrayerPositions.LSELAM  
+    PrayerPositions.NIYET, PrayerPositions.SECDE, PrayerPositions.KADE, PrayerPositions.SECDE, 
+    PrayerPositions.KIYAM, 
+    PrayerPositions.RUKU, PrayerPositions.NIYET,  PrayerPositions.SECDE,PrayerPositions.KADE, 
+    PrayerPositions.SECDE,PrayerPositions.KADE,  PrayerPositions.KIYAM, PrayerPositions.RUKU, 
+    PrayerPositions.NIYET, PrayerPositions.SECDE, PrayerPositions.KADE, PrayerPositions.SECDE, 
+    PrayerPositions.KIYAM, PrayerPositions.RUKU, PrayerPositions.NIYET, PrayerPositions.SECDE,
+    PrayerPositions.KADE, PrayerPositions.SECDE, PrayerPositions.KADE, 
+    PrayerPositions.LRSELAM, PrayerPositions.SON
 ]
 
 ikindi_namazi_4 = oglen_namazi_4
 
 aksam_namazi_3 = [
     PrayerPositions.NIYET, PrayerPositions.TEKBIR, PrayerPositions.KIYAM, PrayerPositions.RUKU,  
-    PrayerPositions.SECDE, PrayerPositions.KADE, PrayerPositions.SECDE, PrayerPositions.KIYAM, 
-    PrayerPositions.RUKU,  PrayerPositions.SECDE, PrayerPositions.KADE, 
+    PrayerPositions.NIYET, PrayerPositions.SECDE, PrayerPositions.KADE, PrayerPositions.SECDE, 
+    PrayerPositions.KIYAM, 
+    PrayerPositions.RUKU, PrayerPositions.NIYET, PrayerPositions.SECDE, PrayerPositions.KADE, 
     PrayerPositions.SECDE, PrayerPositions.KADE, PrayerPositions.KIYAM, PrayerPositions.RUKU,
-    PrayerPositions.SECDE, PrayerPositions.KADE, PrayerPositions.SECDE,
-    PrayerPositions.KADE, PrayerPositions.KIYAM, PrayerPositions.RUKU, 
+    PrayerPositions.NIYET, PrayerPositions.SECDE, PrayerPositions.KADE, PrayerPositions.SECDE,
+    PrayerPositions.KADE, PrayerPositions.KIYAM, PrayerPositions.RUKU, PrayerPositions.NIYET, 
     PrayerPositions.SECDE, PrayerPositions.KADE, PrayerPositions.SECDE, PrayerPositions.KADE,
-    PrayerPositions.RSELAM, PrayerPositions.LSELAM 
+    PrayerPositions.LRSELAM, PrayerPositions.SON
 ]
 
 yatsi_namazi_4 = oglen_namazi_4
+
 
 position_names = {
     PrayerPositions.ALL: "None",
@@ -57,24 +57,26 @@ position_names = {
     PrayerPositions.KIYAM: "Kiyam",
     PrayerPositions.RUKU: "Ruku",
     PrayerPositions.SECDE: "Secde",
-    PrayerPositions.KADE: "Kade",
-    PrayerPositions.RSELAM: "Right Selam",
-    PrayerPositions.LSELAM: "Left Selam"
+    PrayerPositions.KADE: "Kade-oturus",
+    PrayerPositions.LRSELAM: "Saga-Sola Selam",
+    PrayerPositions.SON: "Bitti",
+    
 }
 
 sabah_manazi_timeline = {
-    PrayerPositions.NIYET: (0, 34 ),
-    PrayerPositions.TEKBIR: (25, 27),
-    PrayerPositions.KIYAM:(35, 58),
-    PrayerPositions.RUKU:(58, 73),
-    PrayerPositions.SECDE:(74 ,97 ),
-    PrayerPositions.KADE:(173, 180),
-    PrayerPositions.RSELAM:(180, 188),
-    PrayerPositions.LSELAM:(188, 193)
+    PrayerPositions.NIYET: (0, 13 ),
+    PrayerPositions.TEKBIR: (25, 28),
+    PrayerPositions.KIYAM:(35, 38),
+    PrayerPositions.RUKU:(58, 61),
+    PrayerPositions.SECDE:(74 ,77 ),
+    PrayerPositions.KADE:(173, 176),
+    PrayerPositions.LRSELAM:(180, 183),
+    PrayerPositions.SON:(190,195)
+
 }
 
 sabah_dualari = {
-    PrayerPositions.ALL: 'data/sounds/sabah.ogg',
+    PrayerPositions.ALL: 'data/sounds/sabah1.ogg',
 
 }
 
@@ -103,6 +105,6 @@ position_to_image = {
     PrayerPositions.RUKU: f'data/position_images/[gender]/ruku_position.png',
     PrayerPositions.SECDE: f'data/position_images/[gender]/secde_position.png',
     PrayerPositions.KADE: f'data/position_images/[gender]/kade_position.png',
-    PrayerPositions.RSELAM: f'data/position_images/[gender]/rselam_position.png',
-    PrayerPositions.LSELAM: f'data/position_images/[gender]/lselam_position.png',
+    PrayerPositions.LRSELAM: f'data/position_images/[gender]/lrselam_position.png',
+    PrayerPositions.SON: f'data/position_images/[gender]/tebrikler.jpg',
 }

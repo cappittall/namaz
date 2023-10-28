@@ -8,5 +8,5 @@ class PrayerPositions:
     RUKU = 4
     SECDE = 5
     KADE = 6
-    RSELAM = 7
-    LSELAM = 8
+    LRSELAM = 7
+    SON = 8
