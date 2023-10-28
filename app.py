@@ -108,7 +108,7 @@ class PrayerApp(Gtk.Window):
         self.target_width, self.target_height = int(self.screen.width * 0.95 / 2), int(self.screen.height * 0.8)  
         
         # Initialize camera
-        self.cap = cv2.VideoCapture(0) # '/home/cappittall/Videos/namaz/namaz1.mp4')
+        self.cap = cv2.VideoCapture(1) # '/home/cappittall/Videos/namaz/namaz1.mp4')
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.target_width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.target_height)
         self.cap.set(cv2.CAP_PROP_FPS, 30) 
