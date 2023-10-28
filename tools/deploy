@@ -1,0 +1,9 @@
+#!/bin/sh
+#heroku create inmans --buildpack heroku/python 
+# pipreqs ./ --force  # in oprder to create requirements txt
+
+# pipreqs /home/cappittall/Documents/Said/inmansdj --force
+
+git add .
+git commit -m "Deployin custivo "
+git push heroku master --force
