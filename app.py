@@ -4,11 +4,12 @@ import threading
 import traceback
 import cv2
 from PIL import Image
-import gi
 from tools.constant_settings import * 
 from tools.helper import *
 import mediapipe as mp
+
 # initialize Gtk
+import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GdkPixbuf, GLib
 
