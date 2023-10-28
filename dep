@@ -2,3 +2,7 @@
 
 sudo apt-get update
 sudo apt-get install libgirepository1.0-dev
+export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+echo "LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH" >> ~/.bashrc
+source ~/.bashrc
+conda activate namaz
