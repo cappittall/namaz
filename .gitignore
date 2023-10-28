@@ -1,7 +1,9 @@
-models/
-data/
-!data/sounds
+# Ignore everything in 'models' and 'data' directories
+models/*
+data/*
+
+# Except the specified folders
+!models/all/
+!data/sounds/
 !data/inspect/
-!data/position_images
-!models/all/namazV2_E0_fp16.tflite
-!models/all/namazV2_E0_fp16.tflite
+!data/position_images/
