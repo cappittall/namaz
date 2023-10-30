@@ -1,6 +1,8 @@
 #!/bin/bash
 cd /home/mendel/namaz
 
+conda activate namaz
+
 # Perform git pull or any other setup
 git pull
 
@@ -13,7 +15,7 @@ if [ $? -eq 0 ]; then
   echo "First script executed successfully."
 else
   echo "First script failed. Attempting second script."
-
+  conda activate namaz2
   # Attempt to run the second Python script
   python ~/Documents/namaz/app.py
 
