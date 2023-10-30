@@ -81,7 +81,7 @@ def clear_directory(folder_path):
                     os.rmdir(file_path)
             except Exception as e:
                 print(f"Failed to delete {file_path}. Reason: {e}")
-    except:
+    except Exception as e:
         print(f"Failed to delete Reason: {e}")
             
 def resize_image_to_fixed(image, target_width, target_height):
