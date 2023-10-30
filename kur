@@ -4,11 +4,13 @@ sudo chmod +x baslat.sh
 # copy system file to the service path
 sudo cp tools/namaz.service /etc/systemd/system/namaz.service
 
+sudo systemctl daemon-reload
+
 # Enable to execute on star-up of device
 sudo systemctl enable namaz.service
 
 # Enable to execure on time
-sudo systemctl start namaz.service
+sudo systemctl restart namaz.service
 
 # Check the status of service file
 sudo systemctl status namaz.service

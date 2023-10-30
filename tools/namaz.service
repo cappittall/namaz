@@ -4,7 +4,7 @@ After=multi-user.target
 
 [Service]
 Type=simple
-ExecStart=/bin/bash -c 'source /var/Miniforge3/bin/activate namaz && python /home/mendel/namaz/app.py'
+ExecStart=/home/mendel/namaz/baslat.sh
 WorkingDirectory=/home/mendel/namaz/
 Restart=always
 
