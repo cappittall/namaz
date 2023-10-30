@@ -4,7 +4,8 @@ sudo chmod +x baslat.sh
 sudo usermod -a -G video mendel
 
 # copy system file to the service path
-sudo cp tools/namaz.service /etc/systemd/system/namaz.service
+# sudo cp tools/namaz.service /etc/systemd/system/namaz.service
+sudo rm /etc/systemd/system/namaz.service
 
 sudo systemctl daemon-reload
 
