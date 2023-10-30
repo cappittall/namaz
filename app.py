@@ -22,7 +22,7 @@ pygame.mixer.init()
 
 # Initialize Pose and audio
 model_path = 'models/all/pose_landmarker_full.task'
-model_path_edgetpu = 'models/all/namazV2_E0_fp16.tflite'
+model_path_edgetpu = 'models/all/mobilenet_v2_2.0_224_quant_edgetpu.tflite'
 
 BaseOptions = mp.tasks.BaseOptions
 PoseLandmarker = mp.tasks.vision.PoseLandmarker
@@ -108,7 +108,7 @@ class PrayerApp(Gtk.Window):
         self.target_width, self.target_height = int(self.screen.width * 0.95 / 2), int(self.screen.height * 0.8)  
         
         # Initialize camera
-        self.cap = cv2.VideoCapture(1) # '/home/cappittall/Videos/namaz/namaz1.mp4')
+        self.cap = cv2.VideoCapture(0) # '/home/cappittall/Videos/namaz/namaz1.mp4')
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.target_width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.target_height)
         self.cap.set(cv2.CAP_PROP_FPS, 30) 
@@ -263,7 +263,7 @@ class PrayerApp(Gtk.Window):
                                                 
                         det_time = (time.monotonic() - start)*1000
                         start = time.monotonic()
-                        clasfy_result, conf = get_class_of_position_fp16(croped_image, self.interpreter, self.input_details, self.output_details)
+                        clasfy_result, conf = get_class_of_position(croped_image, self.interpreter, self.input_details, self.output_details)
                         
                         # print(f'Det time - pose:{det_time:.2f} -  tflite_edge: {(time.monotonic() - start ) * 1000 :.2f} ')
                   
