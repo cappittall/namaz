@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sudo chmod +x baslat
+sudo chmod +x baslat.sh
 # copy system file to the service path
 sudo cp tools/namaz.service /etc/systemd/system/namaz.service
 
