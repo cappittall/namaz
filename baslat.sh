@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# Initialize conda
-eval "$(/var/Miniforge3/bin/conda shell.bash hook)"
+# Manually set PATH to use the namaz environment
+export PATH="/home/mendel/.conda/envs/namaz/bin:$PATH"
 
 #change to the folder
 cd /home/mendel/namaz
