@@ -82,7 +82,7 @@ def clear_directory(folder_path):
             except Exception as e:
                 print(f"Failed to delete {file_path}. Reason: {e}")
     except:
-        print(f"Failed to delete {file_path}. Reason: {e}")
+        print(f"Failed to delete Reason: {e}")
             
 def resize_image_to_fixed(image, target_width, target_height):
     return cv2.resize(image, (target_width, target_height))
