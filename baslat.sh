@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Activate Python environment
-source /var/Miniforge3/bin/activate namaz
+source /home/mendel/.Miniforge3/envs/namaz/bin/activate
 
 cd /home/mendel/namaz
 

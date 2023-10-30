@@ -4,9 +4,10 @@ After=multi-user.target
 
 [Service]
 Type=simple
-ExecStart=/home/mendel/namaz/baslat.sh
+ExecStart=/var/Miniforge3/bin/conda run -n namaz /usr/bin/bash -c '/home/mendel/namaz/baslat.sh'
 WorkingDirectory=/home/mendel/namaz/
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
+
