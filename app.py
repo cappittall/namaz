@@ -22,7 +22,7 @@ pygame.mixer.init()
 
 # Initialize Pose and audio
 model_path = 'models/all/pose_landmarker_full.task'
-model_path_edgetpu = 'models/all/mobilenet_v2_2.0_224_quant_edgetpu.tflite'
+model_path_edgetpu = 'models/epochx/mobilenet_v2_1.0_224.tflite'
 
 BaseOptions = mp.tasks.BaseOptions
 PoseLandmarker = mp.tasks.vision.PoseLandmarker
@@ -120,7 +120,7 @@ class PrayerApp(Gtk.Window):
         print('Burda...2')
         self.interpreter = Interpreter(
                     model_path=str(model_path_edgetpu),
-                    experimental_delegates=[load_delegate('libedgetpu.so.1')]
+                    # experimental_delegates=[load_delegate('libedgetpu.so.1')]
                     )
         print('Burda...3')
         self.interpreter.allocate_tensors()
@@ -266,7 +266,10 @@ class PrayerApp(Gtk.Window):
                                                 
                         det_time = (time.monotonic() - start)*1000
                         start = time.monotonic()
-                        clasfy_result, conf = get_class_of_position(croped_image, self.interpreter, self.input_details, self.output_details)
+                        if 'edgetpu' in model_path_edgetpu:
+                            clasfy_result, conf = get_class_of_position(croped_image, self.interpreter, self.input_details, self.output_details)
+                        else:
+                            clasfy_result, conf = get_class_of_position_fp16(croped_image, self.interpreter, self.input_details, self.output_details)
                         
                         # print(f'Det time - pose:{det_time:.2f} -  tflite_edge: {(time.monotonic() - start ) * 1000 :.2f} ')
                   
