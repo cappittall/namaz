@@ -1,9 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# Initialize conda
+eval "$(/var/Miniforge3/bin/conda shell.bash hook)"
+
+#change to the folder
 cd /home/mendel/namaz
-
-conda activate namaz
-
-# Perform git pull or any other setup
 git pull
 
 # Run Python application
