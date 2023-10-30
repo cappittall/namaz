@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Activate Python environment
-source /var/Miniforge3/bin/activate namaz
+conda activate namaz
+cd /home/mendel/namaz
 
 # Perform git pull or any other setup
 git pull
