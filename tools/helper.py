@@ -72,7 +72,7 @@ def get_bounding_box(landmarks, img):
             
     return (x_min, y_min, x_max, y_max)
 
-def get_class_of_position_fp16(image, interpreter, input_details, output_details):
+def get_class_of_position_fp32(image, interpreter, input_details, output_details):
     # This part remains the same
     input_size = tuple(input_details[0]['shape'][1:3])
     
@@ -102,7 +102,7 @@ def get_class_of_position_fp16(image, interpreter, input_details, output_details
     return label, confidence
 
 
-def get_class_of_position(image, interpreter, input_details, output_details):   
+def get_class_of_position_int8(image, interpreter, input_details, output_details):   
     # This part remains the same
     input_size = tuple(input_details[0]['shape'][1:3])
     
@@ -122,9 +122,7 @@ def get_class_of_position(image, interpreter, input_details, output_details):
     interpreter.invoke()
 
     # Get output tensor
-    output_data = interpreter.get_tensor(output_details[0]['index'])
-    print(output_data)
-    
+    output_data = interpreter.get_tensor(output_details[0]['index'])    
     confidence = np.max(output_data)
     print(f'bag >> conf: {int(confidence * 100)}% ', output_data , np.argmax(output_data), input_size )
     

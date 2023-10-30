@@ -1,3 +1,4 @@
+import glob
 import os
 import time
 import threading
@@ -19,10 +20,17 @@ from tflite_runtime.interpreter import load_delegate, Interpreter
 import pygame.mixer
 
 pygame.mixer.init()
-
+models = glob.glob('models/all/*.tflite')
+for i, m in enumerate(models):
+    print(i,'-> ', m)
+while True:
+    model_no = int(input('Model numarsınız seçiniz...?'))
+    if model_no < len(models) and model_no >=0 : break
+    
+model = models[model_no]
 # Initialize Pose and audio
 model_path = 'models/all/pose_landmarker_full.task'
-model_path_edgetpu = 'models/epochx/mobilenet_v2_1.0_224.tflite'
+model_path_tflite = model # 'models/all/mobilenet_v2_1.0_224.tflite'
 
 BaseOptions = mp.tasks.BaseOptions
 PoseLandmarker = mp.tasks.vision.PoseLandmarker
@@ -117,12 +125,14 @@ class PrayerApp(Gtk.Window):
         self.cap.set(cv2.CAP_PROP_FPS, 30) 
 
         # Inıt interpreter
-        print('Burda...2')
-        self.interpreter = Interpreter(
-                    model_path=str(model_path_edgetpu),
-                    # experimental_delegates=[load_delegate('libedgetpu.so.1')]
+        if 'edgetpu' in model_path_tflite: 
+            self.interpreter = Interpreter(
+                    model_path=str(model_path_tflite),
+                    experimental_delegates=[load_delegate('libedgetpu.so.1')]
                     )
-        print('Burda...3')
+        else:
+             self.interpreter = Interpreter(model_path=str(model_path_tflite) )
+
         self.interpreter.allocate_tensors()
         self.input_details = self.interpreter.get_input_details()
         self.output_details = self.interpreter.get_output_details()
@@ -266,10 +276,13 @@ class PrayerApp(Gtk.Window):
                                                 
                         det_time = (time.monotonic() - start)*1000
                         start = time.monotonic()
-                        if 'edgetpu' in model_path_edgetpu:
-                            clasfy_result, conf = get_class_of_position(croped_image, self.interpreter, self.input_details, self.output_details)
+                        
+                        if 'edgetpu' in model_path_tflite:
+                            clasfy_result, conf = get_class_of_position_int8(croped_image, 
+                                        self.interpreter, self.input_details, self.output_details)
                         else:
-                            clasfy_result, conf = get_class_of_position_fp16(croped_image, self.interpreter, self.input_details, self.output_details)
+                            clasfy_result, conf = get_class_of_position_fp32(croped_image, 
+                                        self.interpreter, self.input_details, self.output_details)
                         
                         # print(f'Det time - pose:{det_time:.2f} -  tflite_edge: {(time.monotonic() - start ) * 1000 :.2f} ')
                   
