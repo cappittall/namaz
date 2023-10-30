@@ -4,10 +4,13 @@ After=multi-user.target
 
 [Service]
 Type=simple
+ExecStartPre=/usr/bin/env > /home/mendel/namaz/execstartpre_env.txt
 ExecStart=/home/mendel/namaz/baslat.sh
+ExecStartPost=/usr/bin/env > /home/mendel/namaz/execstartpost_env.txt
 WorkingDirectory=/home/mendel/namaz/
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
+
 
