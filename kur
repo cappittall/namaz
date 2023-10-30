@@ -12,5 +12,4 @@ sudo systemctl enable namaz.service
 # Enable to execure on time
 sudo systemctl restart namaz.service
 
-# Check the status of service file
-sudo systemctl status namaz.service
+
