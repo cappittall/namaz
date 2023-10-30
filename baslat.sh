@@ -1,8 +1,4 @@
 #!/bin/bash
-
-# Activate Python environment
-source /home/mendel/.Miniforge3/envs/namaz/bin/activate
-
 cd /home/mendel/namaz
 
 # Perform git pull or any other setup
