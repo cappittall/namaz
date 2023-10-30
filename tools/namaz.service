@@ -1,13 +1,16 @@
 [Unit]
 Description=Namaz application
 After=multi-user.target
+Requires=graphical.target
 
 [Service]
 Type=simple
-ExecStart=/home/mendel/namaz/baslat.sh > logs.xtx
+User=mendel
+Environment="DISPLAY=:0" "XAUTHORITY=/home/mendel/.Xauthority"
+ExecStart=/home/mendel/namaz/baslat.sh
 WorkingDirectory=/home/mendel/namaz/
 Restart=always
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=graphical.target
 
