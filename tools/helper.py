@@ -123,10 +123,13 @@ def get_class_of_position_int8(image, interpreter, input_details, output_details
 
     # Get output tensor
     output_data = interpreter.get_tensor(output_details[0]['index'])    
+
+    # Dequantize the output data
+    output_scale, output_zero_point = output_details[0]['quantization']
+    output_data = (output_data - output_zero_point) * output_scale
+
     confidence = np.max(output_data)
     print(f'bag >> conf: {int(confidence * 100)}% ', output_data , np.argmax(output_data), input_size )
-    print('input details:', input_details )
-    print('output details:', output_details )
     
     # Determine label
     label = labels[np.argmax(output_data)]
