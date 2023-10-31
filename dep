@@ -1,12 +1,12 @@
 #!/usr/bash
 
 sudo apt-get update
-echo 'export MPLCONFIGDIR="/home/mendel/.config/matplotlib' >> ~/.bashrc
 
 
-chmod +x /home/mendel/namaz/baslat.sh
-mkdir -p /home/mendel/.config/matplotlib
+
+sudo chmod +x /home/mendel/namaz/baslat.sh
+sudo mkdir -p /home/mendel/.config/matplotlib
 sudo chown mendel:mendel /home/mendel/.config/matplotlib
-chmod 755 /home/mendel/.config/matplotlib
+sudo chmod 755 /home/mendel/.config/matplotlib
 [ -w /home/mendel/.config/matplotlib ] && echo "Writable" || echo "Not Writable"
 
