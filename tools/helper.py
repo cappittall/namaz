@@ -451,3 +451,13 @@ def preprocess_image(image_path, target_size=(224, 224)):
     image = image / 255.0
     
     return image
+
+def check_cameras(max_range=3):
+    available_cams = []
+    for i in range(max_range):
+        cap = cv2.VideoCapture(i)
+        if cap.isOpened():
+            available_cams.append(i)
+        cap.release()
+    print(f'Availabele cameras {available_cams}')
+    return available_cams

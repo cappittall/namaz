@@ -40,7 +40,7 @@ models = [
 ]
 # Initialize Pose and audio
 model_path = 'models/all/pose_landmarker_full.task'
-model_path_tflite = models[0]
+model_path_tflite = models[3]
 
 BaseOptions = mp.tasks.BaseOptions
 PoseLandmarker = mp.tasks.vision.PoseLandmarker
@@ -129,7 +129,7 @@ class PrayerApp(Gtk.Window):
         self.target_width, self.target_height = int(self.screen.width * 0.95 / 2), int(self.screen.height * 0.8)  
         
         # Initialize camera
-        self.cap = cv2.VideoCapture(1) # '/home/cappittall/Videos/namaz/namaz1.mp4')
+        self.cap = cv2.VideoCapture(check_cameras()[0]) # '/home/cappittall/Videos/namaz/namaz1.mp4')
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.target_width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.target_height)
         self.cap.set(cv2.CAP_PROP_FPS, 30) 
@@ -153,18 +153,23 @@ class PrayerApp(Gtk.Window):
 
     def show_gender_buttons(self):
         css = '''
+        window {
+            background: green;      
+        }
         button {
             background: yellow;
             color: black;
             font-size: 50px;
             font-weight: bold;
-            margin: 50px;
+      
+   
+            margin: 10px 10px;
+            padding: 10px 5px;
         }
-        window {
-            background: green;
-           
-            
+        button:focus {
+            background: #CCCC00;
         }
+
         '''        
         load_dynamic_css(css)
  
@@ -199,7 +204,9 @@ class PrayerApp(Gtk.Window):
 
     def show_prayer_type_buttons(self):
         css = '''
-        
+        window {
+            background: green;
+        }
         button, label {
             background: yellow;
             color: black;
@@ -208,12 +215,14 @@ class PrayerApp(Gtk.Window):
             padding: 10px 5px;
         }
         
+        button:focus {
+            background: #CCCC00;
+        }
+        
         label#title_label {
             font-weight: bold;
         }
-        window {
-            background: green;
-        }
+
         '''
         load_dynamic_css(css)
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
@@ -294,7 +303,7 @@ class PrayerApp(Gtk.Window):
                             clasfy_result, conf = get_class_of_position_fp32(croped_image, 
                                         self.interpreter, self.input_details, self.output_details)
                         
-                        # print(f'Det time - pose:{det_time:.2f} -  tflite_edge: {(time.monotonic() - start ) * 1000 :.2f} ')
+                        print(f'Det time - pose:{det_time} -  tflite_edge: {(time.monotonic() - start ) * 1000} ')
                   
                         # consider if confidence > 70% 
                         if conf > 0.7:
@@ -349,6 +358,9 @@ class PrayerApp(Gtk.Window):
             margin: 5px 5px;  
             padding: 5px 2.5px;  
 
+        }
+        button:focus {
+            background: #CCCC00;
         }
         label#title_label {
             font-weight: bold;
