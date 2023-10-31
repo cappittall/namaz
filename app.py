@@ -270,14 +270,21 @@ class PrayerApp(Gtk.Window):
         self.run_main_code()
     
     def capture_camera(self,):
-        
+        last_time = time.time() 
         ## Start looping 
         while self.cap.isOpened():
             ret, image = self.cap.read()
-            
+             # Initialize time variable   
+                     
             if not ret:
                 continue
             try: 
+                current_time = time.time()  # Measure current time
+                time_taken = current_time - last_time  # Calculate time taken for this frame
+                frame_rate = 1 / time_taken if time_taken != 0 else 0  # Calculate Frame Rate
+                
+                last_time = current_time  
+                
                 detection_result = get_landmarks_infrance(image.copy(), landmarker)
                 # draw landmarks on image           
                 if detection_result:
@@ -296,16 +303,16 @@ class PrayerApp(Gtk.Window):
                         det_time = (time.monotonic() - start)*1000
                         start = time.monotonic()
                         
-                        """ if 'edgetpu' in model_path_tflite:
+                        if 'edgetpu' in model_path_tflite:
                             clasfy_result, conf = get_class_of_position_int8(croped_image, 
                                         self.interpreter, self.input_details, self.output_details)
                         else:
                             clasfy_result, conf = get_class_of_position_fp32(croped_image, 
                                         self.interpreter, self.input_details, self.output_details) 
                                         
-                        
-                        print(f'Det time - pose:{det_time} -  tflite_edge: {(time.monotonic() - start ) * 1000} ')
-                  
+                        num_uncompleted_threads = threading.active_count() - 1 
+                        print(f'Det time - pose:{det_time} -  tflite_edge: {(time.monotonic() - start ) * 1000} Tread #:{num_uncompleted_threads} FPS: {frame_rate}')
+
                         # consider if confidence > 70% 
                         if conf > 0.7:
                             if clasfy_result == "secde":
@@ -316,8 +323,7 @@ class PrayerApp(Gtk.Window):
                                                        
                         else:
                             yzmodel_rez = ''
-                        """
-                        yzmodel_rez = ''
+                      
                         # Write current position name on frame.
                         position_note  = f"CP_{self.current_position}{self.counter}/{len(self.current_sequence)}- {yzmodel_rez} "
                         annotated_image = self.display_position_on_image(annotated_image, self.current_position, self.next_position, position_notes=position_note)
