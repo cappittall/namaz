@@ -2,11 +2,9 @@
 
 sudo apt-get update
 
+sudo chmod +x /home/mendel/namaz/baslat
 
-
-sudo chmod +x /home/mendel/namaz/baslat.sh
-sudo mkdir -p /home/mendel/.config/matplotlib
-sudo chown mendel:mendel /home/mendel/.config/matplotlib
-sudo chmod 755 /home/mendel/.config/matplotlib
+sudo chown mendel:mendel /home/mendel/.config/
+sudo chmod 755 /home/mendel/.config/
 [ -w /home/mendel/.config/matplotlib ] && echo "Writable" || echo "Not Writable"
 
