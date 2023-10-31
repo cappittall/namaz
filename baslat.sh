@@ -5,7 +5,7 @@ export PATH="/home/mendel/.conda/envs/namaz/bin:$PATH"
 
 #change to the folder
 cd /home/mendel/namaz
-git pull
+sudo git pull
 
 # Run Python application
 # Attempt to run the first Python script

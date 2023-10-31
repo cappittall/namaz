@@ -93,7 +93,7 @@ def get_class_of_position_fp32(image, interpreter, input_details, output_details
 
     # Get output tensor
     output_data = interpreter.get_tensor(output_details[0]['index'])
-    
+    print(output_data)
     confidence = np.max(output_data)   
 
     # Determine label

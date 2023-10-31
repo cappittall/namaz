@@ -20,17 +20,19 @@ from tflite_runtime.interpreter import load_delegate, Interpreter
 import pygame.mixer
 
 pygame.mixer.init()
-models = glob.glob('models/all/*.tflite')
+
+""" models = glob.glob('models/all/*.tflite')
 for i, m in enumerate(models):
     print(i,'-> ', m)
 while True:
     model_no = int(input('Model numarsınız seçiniz...?'))
     if model_no < len(models) and model_no >=0 : break
     
-model = models[model_no]
+model = models[model_no] """
+
 # Initialize Pose and audio
 model_path = 'models/all/pose_landmarker_full.task'
-model_path_tflite = model # 'models/all/mobilenet_v2_1.0_224.tflite'
+model_path_tflite = 'models/all/mobilenet_v2_1.0_224.tflite'
 
 BaseOptions = mp.tasks.BaseOptions
 PoseLandmarker = mp.tasks.vision.PoseLandmarker
