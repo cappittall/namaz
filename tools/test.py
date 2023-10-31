@@ -1,4 +1,4 @@
-import os
+""" import os
 import time
 import pygame.mixer
 
@@ -28,7 +28,7 @@ time.sleep(1)
 # Play from your desired start time to end time, say 1 to 10 seconds
 pygame.mixer.music.play(start=1)
 time.sleep(9)  # let it play for 9 seconds
-pygame.mixer.music.stop()
+pygame.mixer.music.stop() """
 
 import cv2
 
