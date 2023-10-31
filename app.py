@@ -32,6 +32,8 @@ model = models[model_no] """
 
 models = [
     'models/all/mobilenet_v2_1.0_224_quant_edgetpu.tflite',
+    'models/all/namazV0_E0_edgetpu.tflite',
+    'models/all/namazV2_E0_edgetpu.tflite',
     'models/all/mobilenet_v2_1.0_224.tflite',
     'models/all/namazV0_E0.tflite',
     'models/all/namazV2_E0.tflite' 
