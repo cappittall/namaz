@@ -296,12 +296,13 @@ class PrayerApp(Gtk.Window):
                         det_time = (time.monotonic() - start)*1000
                         start = time.monotonic()
                         
-                        if 'edgetpu' in model_path_tflite:
+                        """ if 'edgetpu' in model_path_tflite:
                             clasfy_result, conf = get_class_of_position_int8(croped_image, 
                                         self.interpreter, self.input_details, self.output_details)
                         else:
                             clasfy_result, conf = get_class_of_position_fp32(croped_image, 
-                                        self.interpreter, self.input_details, self.output_details)
+                                        self.interpreter, self.input_details, self.output_details) 
+                                        
                         
                         print(f'Det time - pose:{det_time} -  tflite_edge: {(time.monotonic() - start ) * 1000} ')
                   
@@ -315,7 +316,8 @@ class PrayerApp(Gtk.Window):
                                                        
                         else:
                             yzmodel_rez = ''
-
+                        """
+                        yzmodel_rez = ''
                         # Write current position name on frame.
                         position_note  = f"CP_{self.current_position}{self.counter}/{len(self.current_sequence)}- {yzmodel_rez} "
                         annotated_image = self.display_position_on_image(annotated_image, self.current_position, self.next_position, position_notes=position_note)
