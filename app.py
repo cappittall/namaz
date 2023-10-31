@@ -30,9 +30,15 @@ while True:
     
 model = models[model_no] """
 
+models = [
+    'models/all/mobilenet_v2_1.0_224_quant_edgetpu.tflite',
+    'models/all/mobilenet_v2_1.0_224.tflite',
+    'models/all/namazV0_E0.tflite',
+    'models/all/namazV2_E0.tflite' 
+]
 # Initialize Pose and audio
 model_path = 'models/all/pose_landmarker_full.task'
-model_path_tflite = 'models/all/mobilenet_v2_1.0_224.tflite'
+model_path_tflite = models[0]
 
 BaseOptions = mp.tasks.BaseOptions
 PoseLandmarker = mp.tasks.vision.PoseLandmarker
