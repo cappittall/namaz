@@ -295,7 +295,7 @@ class PrayerApp(Gtk.Window):
                         bbox = get_bounding_box(landmarks, image)
                         start = time.monotonic()
                         # get current position
-                        self.current_position = check_position(image.copy(), landmarks, self.gender)
+                        self.current_position, is_standing = check_position(image.copy(), landmarks, self.gender)
                         
                         # crop image in order to classify position
                         croped_image = image[bbox[1]:bbox[3], bbox[0]:bbox[2]]
@@ -313,10 +313,14 @@ class PrayerApp(Gtk.Window):
                         num_uncompleted_threads = threading.active_count() - 1 
                         print(f'Det time - pose:{det_time} -  tflite_edge: {(time.monotonic() - start ) * 1000} Tread #:{num_uncompleted_threads} FPS: {frame_rate}')
 
-                        # consider if confidence > 70% 
-                        if conf > 0.7:
+                        # consider if confidence > 70% and not standing
+                        if conf > 0.8 and not is_standing:
+                            if clasfy_result == "kade":
+                                self.current_position = PrayerPositions.KADE 
                             if clasfy_result == "secde":
                                 self.current_position = PrayerPositions.SECDE
+                            
+                                
                             yzmodel_rez = f'{clasfy_result} {int(conf*100)}%' 
                             args = {'args': f'{clasfy_result} {int(conf*100)}%' }
                             threading.Thread(target=write_inspection_on_image, args=(croped_image,args,)).start()

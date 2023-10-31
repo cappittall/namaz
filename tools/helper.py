@@ -412,29 +412,28 @@ def check_position(image, landmarks, gender):
     if is_strait(landmarks):
         
         if is_tekbir(image, landmarks, gender):
-            return PrayerPositions.TEKBIR
+            return PrayerPositions.TEKBIR, True
         
         elif is_kiyam(image, landmarks, gender):
-            return PrayerPositions.KIYAM
+            return PrayerPositions.KIYAM, True
         
         elif is_ruku(image, landmarks, gender):
-            return PrayerPositions.RUKU
+            return PrayerPositions.RUKU, True
     
         elif is_niyet(image, landmarks, gender):
-            return PrayerPositions.NIYET
-        
+            return PrayerPositions.NIYET, True
         else: 
-            return None
+            return None, True
         
     else:
         if is_kade(image, landmarks, gender):
-            return PrayerPositions.KADE
+            return PrayerPositions.KADE, False
         
         elif is_secde(image, landmarks, gender):
-            return PrayerPositions.SECDE
+            return PrayerPositions.SECDE, False
 
         else:
-            return None
+            return None, False
         
 
 def preprocess_image(image_path, target_size=(224, 224)):
