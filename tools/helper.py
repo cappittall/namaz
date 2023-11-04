@@ -16,6 +16,8 @@ thread_pool = ThreadPoolExecutor(max_workers=10)
 # Labels corresponding to the output of your model, assumed to be in order
 labels = ['kade', 'kiyam', 'ruku', 'secde']
 
+
+
 def draw_landmarks_on_image(rgb_image, detection_result ):
         
     pose_landmarks_list = detection_result.pose_landmarks
@@ -93,7 +95,6 @@ def get_class_of_position_fp32(image, interpreter, input_details, output_details
 
     # Get output tensor
     output_data = interpreter.get_tensor(output_details[0]['index'])
-    print(output_data)
     confidence = np.max(output_data)   
 
     # Determine label
@@ -128,9 +129,7 @@ def get_class_of_position_int8(image, interpreter, input_details, output_details
     output_scale, output_zero_point = output_details[0]['quantization']
     output_data = (output_data - output_zero_point) * output_scale
 
-    confidence = np.max(output_data)
-    print(f'bag >> conf: {int(confidence * 100)}% ', output_data , np.argmax(output_data), input_size )
-    
+    confidence = np.max(output_data)    
     # Determine label
     label = labels[np.argmax(output_data)]
         
@@ -384,13 +383,13 @@ def is_secde(image, landmarks, gender="k"):
     hips_y = (landmarks[23].y +landmarks[24].y ) / 2 
 
    
-    # whether if nose is below sholders 
+    # whether if left & right ear close to hand and  is below sholders 
     
-    nose_to_left_hand = calculate_distance(landmarks[0], landmarks[15] )
-    nose_to_right_hand = calculate_distance(landmarks[0], landmarks[16] )
-    nose_to_hands = (nose_to_left_hand + nose_to_right_hand) / 2
+    l_ear_to_left_hand = calculate_distance(landmarks[7], landmarks[19] )
+    r_ear_to_right_hand = calculate_distance(landmarks[8], landmarks[20] )
+    ears_to_hands = (l_ear_to_left_hand + r_ear_to_right_hand) / 2
     
-    final_check = sholders_y >= hips_y or nose_to_hands <= thresholds_m 
+    final_check = sholders_y >= hips_y or ears_to_hands <= thresholds_l
     
     inspections['Secde'] = final_check
     inspections['hips, '] = str(hips_y)[:5] 
@@ -458,5 +457,37 @@ def check_cameras(max_range=3):
         if cap.isOpened():
             available_cams.append(i)
         cap.release()
-    print(f'Availabele cameras {available_cams}')
+    print(f'Uygun kamera num: {available_cams}')
     return available_cams
+
+def compare_positions(position1, position2):
+    kiyam_poss = (PrayerPositions.KIYAM, PrayerPositions.KIYAM2, PrayerPositions.KIYAM3 )
+    kade_poss = (PrayerPositions.KADE, PrayerPositions.KADE2, PrayerPositions.KADE3, PrayerPositions.KADE_S)
+    niyet_poss = (PrayerPositions.NIYET, PrayerPositions.NIYET_S)
+    
+    if position1 == position2:
+        return True
+    if position1 in kiyam_poss and  position2 in kiyam_poss:
+        return True
+    if position1 in kade_poss and position2 in kade_poss:
+        return True
+    if position1 in niyet_poss and position2 in niyet_poss:
+        return True
+    return False
+
+
+def load_squences(prayer_time):
+    
+    print( 'Vakit : ', prayer_time )
+    sequences = {
+        'Sabah': (sabah_namazi_2, sabah_dualari, sabah_manazi_timeline),
+        'Öğle': (oglen_namazi_4, oglen_dualari, sabah_manazi_timeline), 
+        'İkindi': (ikindi_namazi_4, ikindi_dualari, sabah_manazi_timeline),
+        'Akşam': (aksam_namazi_3, aksam_dualari, sabah_manazi_timeline),
+        'Yatsı': (yatsi_namazi_4, yatsi_dualari, sabah_manazi_timeline)
+    }
+
+    current_sequence, current_prayer_sounds, timeline = sequences.get(
+                                prayer_time, (None, None, None))
+    
+    return current_sequence, current_prayer_sounds, timeline

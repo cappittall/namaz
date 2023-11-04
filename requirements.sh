@@ -8,6 +8,11 @@ sudo apt install -y gcc libcairo2-dev
 sudo apt install -y pkg-config
 sudo apt install -y python3-dev 
 sudo apt install -y gir1.2-gtk-3.0
+sudo apt install -y librsvg2-common
+sudo update-mime-database /usr/share/mime
+sudo gtk-update-icon-cache /usr/share/icons/Yaru/
+
+
 
 pip3 install wheel
 
