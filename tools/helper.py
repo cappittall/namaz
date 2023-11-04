@@ -16,7 +16,7 @@ thread_pool = ThreadPoolExecutor(max_workers=10)
 # Labels corresponding to the output of your model, assumed to be in order
 labels = ['kade', 'kiyam', 'ruku', 'secde']
 
-
+DEBUG=True
 
 def draw_landmarks_on_image(rgb_image, detection_result ):
         
