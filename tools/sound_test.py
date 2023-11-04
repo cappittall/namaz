@@ -31,5 +31,5 @@ def play_sound(sequence):
         except Exception as e:
             print('Hata , ', e )
 
-
+pygame.mixer.music.set_volume(0.5)
 play_sound(PrayerPositions.RLSELAM)
