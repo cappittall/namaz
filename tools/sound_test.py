@@ -32,4 +32,4 @@ def play_sound(sequence):
             print('Hata , ', e )
 
 pygame.mixer.music.set_volume(0.5)
-play_sound(PrayerPositions.RLSELAM)
+play_sound(PrayerPositions.NIYET)

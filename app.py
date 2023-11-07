@@ -110,6 +110,8 @@ class PrayerApp(Gtk.Window):
         self.namaz_timeline = None
         self.current_prayer_sounds = None
         
+        self.worker_threads = []
+        
         # Threading setting
         self.executor = ThreadPoolExecutor(max_workers=4)
         self.debug = False
@@ -398,7 +400,11 @@ class PrayerApp(Gtk.Window):
         
         # Initial ref image and sound
         self.update_reference_image( self.current_position )
-        threading.Thread(target=self.play_sound_and_update_ui, args=(self.current_position, self.next_position, )).start()       
+        worker = threading.Thread(target=self.play_sound_and_update_ui, args=(self.current_position, self.next_position, ))  
+        worker.daemon = True
+        worker.start()
+        self.worker_threads.append(worker)
+            
         # Start the camera capture in a new thread
         camera_thread = threading.Thread(target=self.capture_camera )
         camera_thread.daemon = True
@@ -427,7 +433,7 @@ class PrayerApp(Gtk.Window):
                 print("Exception: ", e)
                 traceback.print_exc()
                                                  
-            if self.sould_change_position():
+            if self.should_change_position():
                 print('Posizyon check e girdi... ', self.sound_end_check, threading.active_count() - 1 )
                 self.sound_end_check = False
                 self.current_position = self.next_position
@@ -442,12 +448,14 @@ class PrayerApp(Gtk.Window):
             # Update annotated image 
             self.update_cam_image(annotated_image )
                                   
-    def sould_change_position(self,):
-        return ((self.detected_position != self.current_position and \
-                compare_positions(self.next_position, self.detected_position))\
-                 or (self.next_position == PrayerPositions.RLSELAM)) and \
-                self.sound_end_check and self.detected_position is not None
-                   
+    def should_change_position(self):
+         # Fixed the method name and simplified the logic for clarity
+        is_different_position = self.detected_position != self.current_position
+        is_correct_next_position = compare_positions(self.next_position, self.detected_position)
+        is_final_position = self.next_position == PrayerPositions.RLSELAM
+        return (is_different_position and is_correct_next_position or is_final_position) and \
+            self.sound_end_check and self.detected_position is not None
+                              
     def play_sound_segment(self, start, duration, next_position):
         # Prepare the player for seeking
         self.player.set_state(Gst.State.PAUSED)
@@ -467,6 +475,18 @@ class PrayerApp(Gtk.Window):
 
         # Set a timer to execute the end_of_duration callback after the duration
         GLib.timeout_add_seconds(duration, self.end_of_duration, next_position)
+        
+    def cancel_threads(self):
+        # Cancel all threads except for the camera_thread
+        for thread in self.worker_threads:
+            if thread.is_alive():
+                # Set a stop flag that your thread functions need to check regularly
+                thread.stop = True
+                thread.join()  # Wait for the thread to finish its work
+
+        # Clean up the list of worker threads
+        self.worker_threads = [t for t in self.worker_threads if not t.is_alive()]
+
 
     def end_of_duration(self, next_position):
         # This function will be called by GLib after 'duration' seconds
@@ -474,6 +494,8 @@ class PrayerApp(Gtk.Window):
         self.player.set_state(Gst.State.NULL)
         self.update_reference_image(next_position)
         self.sound_end_check = True
+        self.cancel_threads()
+        
         return False  # Return False to stop the timer from repeating
     
     def on_eos(self, bus, msg):
@@ -489,14 +511,24 @@ class PrayerApp(Gtk.Window):
         try:
             time_period = self.namaz_timeline.get(current_position, None)        
             start, stop = time_period
-            stop = start + 10 if self.debug else stop
+            
+            if self.debug:
+                if (stop - start) > 30:
+                    stop = start + 10
+                    
             duration = stop - start  # Calculate duration based on start and stop
              
             # Play the sound segment in a separate thread to avoid blocking
-            threading.Thread(target=self.play_sound_segment, args=(start, duration, next_position )).start()
+            w1 = threading.Thread(target=self.play_sound_segment, args=(start, duration, next_position ))
+            w1.daemon = True
+            w1.start()
+            self.worker_threads.append(w1)
             
             # Start updating message images in a separate thread
-            threading.Thread(target=self.update_message_images, args=(start, stop)).start()
+            w2= threading.Thread(target=self.update_message_images, args=(start, stop))
+            w2.daemon = True
+            w2.start()
+            self.worker_threads.append(w2)
         
         except Exception as e:
             print('Hata: ', e)
@@ -553,6 +585,7 @@ class PrayerApp(Gtk.Window):
                 print('Message image reading error', e )
                 traceback.print_exc()
             time.sleep(1)
+        return False
             
     def _update_message_images(self,img):
         self.message_img_frame.set_from_pixbuf(self.cv2_to_gdkpixbuf(img))
@@ -596,6 +629,7 @@ class PrayerApp(Gtk.Window):
                 yzmodel_result = f'{clasfy_result} {int(conf*100)}%' 
                 args = {'args': f'{clasfy_result} {int(conf*100)}%' }
                 # threading.Thread(target=write_inspection_on_image, args=(croped_image,args,)).start()
+                
         position_notes  = f"CP_{self.detected_position}: {self.counter}/{len(self.current_sequence)}- {yzmodel_result} "
         return annotated_image, position_notes
     
