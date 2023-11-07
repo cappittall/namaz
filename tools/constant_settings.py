@@ -52,8 +52,8 @@ yatsi_namazi_4 = oglen_namazi_4
 
 position_names = {
     PrayerPositions.ALL: "None",
-    PrayerPositions.NIYET: "Niyet etme",
-    PrayerPositions.NIYET_S:"Ara Dogrulma",
+    PrayerPositions.NIYET: "Niyet",
+    PrayerPositions.NIYET_S:"Dogrulma",
     PrayerPositions.TEKBIR: "Tekbir",
     PrayerPositions.KIYAM: "Kiyam",
     PrayerPositions.KIYAM2: "Kiyam",

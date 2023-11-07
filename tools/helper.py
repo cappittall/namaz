@@ -228,7 +228,7 @@ def is_tekbir(image, landmarks, gender="k"):
     inspections['d_lr'] = str(distance_between_hands)[:5] ## left to right 
 
     if _is_tekbir:
-        print('Tekbir ',  inspections )
+        # print('Tekbir ',  inspections )
         # threading.Thread(target=write_inspection_on_image, args=(image, inspections, ) ).start()
         # thread_pool.submit(write_inspection_on_image, image, inspections)
         return True
@@ -275,7 +275,7 @@ def is_kiyam(image, landmarks, gender='k' ):
     inspections['d_ref'] = str(distance_to_ref_position)[:5]
     
     if _is_kiyam:
-        print('Kıyam ',  inspections )
+        # print('Kıyam ',  inspections )
         # threading.Thread(target=write_inspection_on_image, args=(image, inspections, ) ).start()
         # thread_pool.submit(write_inspection_on_image, image, inspections)
         
@@ -307,7 +307,7 @@ def is_ruku(image, landmarks, gender="k"):
     inspections['dtns'] = str(distance_noise_spine)[:5]
        
     if is_distance_noise_spine and is_hands_under_bell:
-        print('Ruku ',  inspections )
+        # print('Ruku ',  inspections )
         # threading.Thread(target=write_inspection_on_image, args=(image, inspections, ) ).start()
         # thread_pool.submit(write_inspection_on_image, image, inspections)
         return True
@@ -361,7 +361,7 @@ def is_kade(image, landmarks, gender="k"):
     
     
     if is_kade_pos:
-        print('Kade ',  inspections )
+        # print('Kade ',  inspections )
         # threading.Thread(target=write_inspection_on_image, args=(image, inspections, ) ).start()
         # thread_pool.submit(write_inspection_on_image, image, inspections)
         return True
@@ -399,7 +399,7 @@ def is_secde(image, landmarks, gender="k"):
     inspections['Ayak'] = str(ankles_y)[:5] 
         
     # print('Secde ',  inspections )
-    print('Secde ',  inspections )
+
     if final_check:
         threading.Thread(target=write_inspection_on_image, args=(image, inspections, ) ).start()
         # thread_pool.submit(write_inspection_on_image, image, inspections)
