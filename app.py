@@ -3,7 +3,6 @@ import os
 import time
 
 import threading
-from concurrent.futures import ThreadPoolExecutor
 
 import traceback
 import cv2
@@ -111,9 +110,6 @@ class PrayerApp(Gtk.Window):
         self.current_prayer_sounds = None
         
         self.worker_threads = []
-        
-        # Threading setting
-        self.executor = ThreadPoolExecutor(max_workers=4)
         self.debug = False
         # Resize the images
         self.screen = Gdk.Display.get_default().get_monitor(0).get_geometry()    
@@ -696,7 +692,6 @@ class PrayerApp(Gtk.Window):
     def on_exit_clicked(self, button=None):  # button might be None if called without a button event
         self.close_cap_and_sound()
         # Exit the application
-        self.executor.shutdown(wait=True)
         Gtk.main_quit()
         
 if __name__ == "__main__":

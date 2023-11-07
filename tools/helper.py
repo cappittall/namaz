@@ -10,9 +10,6 @@ from mediapipe.framework.formats import landmark_pb2
 from mediapipe import solutions
 import mediapipe as mp
 import threading
-from concurrent.futures import ThreadPoolExecutor
-
-thread_pool = ThreadPoolExecutor(max_workers=10)
 # Labels corresponding to the output of your model, assumed to be in order
 labels = ['kade', 'kiyam', 'ruku', 'secde']
 
