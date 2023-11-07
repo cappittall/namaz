@@ -5,7 +5,7 @@ import os
 video_path = '/home/cappittall/Videos/namaz/sabah_namazi_2rekat_farz.mp4'
 
 # Create a folder to save the images
-save_folder = 'data/position_images/messages'
+save_folder = 'data/positions/messages'
 os.makedirs(save_folder, exist_ok=True)
 
 # Open the video

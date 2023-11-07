@@ -104,7 +104,7 @@ class PrayerApp(Gtk.Window):
         self.next_position = None
         
         self.check_image = False
-
+        self.counter2 = 0
         self.sound_end_check = True
         self.namaz_timeline = None
         self.current_prayer_sounds = None
@@ -413,6 +413,7 @@ class PrayerApp(Gtk.Window):
         ## Start looping 
         while self.cap.isOpened():
             ret, image = self.cap.read()
+            self.counter2 += 1
              # Initialize time variable   
             if not ret:
                 continue
@@ -572,7 +573,7 @@ class PrayerApp(Gtk.Window):
     def update_message_images(self, start, stop):
         for second in range(start, stop):
             try:
-                mess_img_path = f'data/position_images/messages/{self.prayer_time}/frame_{second}.jpg'
+                mess_img_path = f'data/positions/messages/{self.prayer_time}/frame_{second}.jpg'
                 message_image = cv2.imread(mess_img_path)
                 message_image = resize_image_to_fixed(message_image, self.target_width, self.target_height/7 )
                 GLib.idle_add(self._update_message_images,  message_image)
@@ -589,9 +590,8 @@ class PrayerApp(Gtk.Window):
      
     def handle_detection_result(self, detection_result, image ):
         annotated_image = draw_landmarks_on_image(image.copy(), detection_result)
-        frame_rate, last_time = self.calculate_frame_rate()
-        num_uncompleted_threads = threading.active_count() - 1 
         yzmodel_result = ""
+        frame_rate = self.calculate_frame_rate() 
         if detection_result.pose_landmarks:
             landmarks = detection_result.pose_landmarks[0]
             bbox = get_bounding_box(landmarks, image)
@@ -601,42 +601,43 @@ class PrayerApp(Gtk.Window):
             
             # crop image in order to classify position
             croped_image = image[bbox[1]:bbox[3], bbox[0]:bbox[2]]
-                                    
+                          
             det_time = (time.monotonic() - start) * 1000
             start = time.monotonic()
-            
-            if 'edgetpu' in model_path_tflite:
-                clasfy_result, conf = get_class_of_position_int8(croped_image, 
-                            self.interpreter, self.input_details, self.output_details)
-            else:
-                clasfy_result, conf = get_class_of_position_fp32(croped_image, 
-                            self.interpreter, self.input_details, self.output_details) 
+            if self.counter2 % 10 == 0:
+                if 'edgetpu' in model_path_tflite:
+                    clasfy_result, conf = get_class_of_position_int8(croped_image, 
+                                self.interpreter, self.input_details, self.output_details)
+                else:
+                    clasfy_result, conf = get_class_of_position_fp32(croped_image, 
+                                self.interpreter, self.input_details, self.output_details) 
+  
+                # consider if confidence > 80% and not standing
+                if conf > 0.8 and not is_standing:
+                    if clasfy_result == "kade":
+                        self.detected_position = PrayerPositions.KADE 
+                    if clasfy_result == "secde":
+                        self.detected_position = PrayerPositions.SECDE
+                    
+                    yzmodel_result = f'{clasfy_result} {int(conf*100)}%' 
+                    args = {'args': f'{clasfy_result} {int(conf*100)}%' }
+                    # threading.Thread(target=write_inspection_on_image, args=(croped_image,args,)).start()
             if self.debug:
                 pass
                 # print(f'Det time - pose:{det_time} -  tflite-edge: {(time.monotonic() - start ) * 1000} Tread #:{num_uncompleted_threads} FPS: {frame_rate}')
             
-            # consider if confidence > 80% and not standing
-            if conf > 0.8 and not is_standing:
-                if clasfy_result == "kade":
-                    self.detected_position = PrayerPositions.KADE 
-                if clasfy_result == "secde":
-                    self.detected_position = PrayerPositions.SECDE
-                
-                yzmodel_result = f'{clasfy_result} {int(conf*100)}%' 
-                args = {'args': f'{clasfy_result} {int(conf*100)}%' }
-                # threading.Thread(target=write_inspection_on_image, args=(croped_image,args,)).start()
-                
-        position_notes  = f"CP_{self.detected_position}: {self.counter}/{len(self.current_sequence)}- {yzmodel_result} "
+        position_notes  = f"Dp:{self.detected_position}: {self.counter}/{len(self.current_sequence)}-{yzmodel_result}- FPS:{frame_rate}"
         return annotated_image, position_notes
     
     def display_position_on_image(self, image, detected_position, next_position, position_notes=None):
         # Get the position name from the mapping
-        position_name = position_names.get(detected_position, "PozYok")
-        next_poz = position_names.get(next_position, "PozYok")
+        position_name = position_names.get(detected_position, "")
+        next_poz = position_names.get(next_position, "")
         # Put the detected position name on the image
         if self.debug:
-            cv2.putText(image, f"P: {position_name}", (5, 200), cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 255, 0), 4)
-            cv2.putText(image, position_notes, (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1.5 , (0, 0, 255), 4)
+            h,w,_ = image.shape 
+            cv2.putText(image, f"{position_name}", (5, h-50), cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 255, 0), 4)
+            cv2.putText(image, position_notes, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5 , (0, 0, 255), 4)
         self.update_message1(next_poz)
         return image
                 
@@ -646,7 +647,7 @@ class PrayerApp(Gtk.Window):
         self.debug = checkbutton.get_active()
     
     def update_message1(self, new_text):
-        self.message_box1.set_text(new_text)
+        self.message_box1.set_text('SONRAKI- ' +  new_text.upper())
 
     def update_message2(self, new_text):
         self.message_box2.set_text(new_text)
@@ -657,7 +658,7 @@ class PrayerApp(Gtk.Window):
         time_taken = current_time - self.last_time
         frame_rate = 1 / time_taken if time_taken != 0 else 0
         self.last_time = current_time
-        return frame_rate, self.last_time
+        return frame_rate
     
     def setup_camera(self,):
         if hasattr(self, 'cap'):

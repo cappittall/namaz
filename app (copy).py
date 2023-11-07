@@ -625,7 +625,7 @@ class PrayerApp(Gtk.Window):
     def update_message_image(self, start, stop):
         for second in range(start, stop):
             try:
-                mess_img_path = f'data/position_images/messages/frame_{second}.jpg'
+                mess_img_path = f'data/positions/messages/frame_{second}.jpg'
                 message_image = cv2.imread(mess_img_path)
                 message_image = resize_image_to_fixed(message_image, self.target_width, self.target_height/7 )
                 pixbuf_reference = self.cv2_to_gdkpixbuf(message_image)

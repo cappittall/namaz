@@ -5,4 +5,4 @@ data/*
 # Except the specified folders
 !models/all/
 !data/sounds/
-!data/position_images/
+!data/positions/
