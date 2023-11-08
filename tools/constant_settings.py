@@ -29,7 +29,7 @@ last_time = 0
 min_stable_time = 1  # Time in seconds
 # sabah namazı position order
 sabah_namazi_2 =  [
-    PrayerPositions.TEKBIR, PrayerPositions.KIYAM, 
+    PrayerPositions.NIYET, PrayerPositions.TEKBIR, PrayerPositions.KIYAM, 
     PrayerPositions.RUKU, PrayerPositions.NIYET_S, PrayerPositions.SECDE, 
     PrayerPositions.KADE_S, PrayerPositions.SECDE, PrayerPositions.KIYAM2, 
     PrayerPositions.RUKU, PrayerPositions.NIYET_S, PrayerPositions.SECDE, 
