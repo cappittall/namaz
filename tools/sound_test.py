@@ -17,7 +17,7 @@ pygame.mixer.music.load(current_prayer_sounds.get(PrayerPositions.ALL, None))
 
 def play_sound(sequence):
     # For timeline playlist exist from one file 
-    time_period = sabah_manazi_timeline.get(sequence, None)  
+    time_period = sabah_manazi_soundline.get(sequence, None)  
     print(time_period)      
     if time_period:
         try:

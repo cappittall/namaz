@@ -1,4 +1,3 @@
-import glob
 import os
 import time
 
@@ -104,23 +103,20 @@ class PrayerApp(Gtk.Window):
         self.next_position = None
         
         self.check_image = False
-        self.counter2 = 0
+        self.frame_counter = 0
         self.sound_end_check = True
         self.namaz_timeline = None
         self.current_prayer_sounds = None
         
-        self.worker_threads = []
         self.debug = False
         # Resize the images
         self.screen = Gdk.Display.get_default().get_monitor(0).get_geometry()    
         self.target_width, self.target_height = int(self.screen.width * 0.95 / 2), int(self.screen.height * 0.8)  
         
         # Initialize camera
-        self.cam_no = check_cameras()[0]
-        self.cap = cv2.VideoCapture(self.cam_no) # '/home/cappittall/Videos/namaz/namaz1.mp4')
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.target_width)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.target_height)
-        self.cap.set(cv2.CAP_PROP_FPS, 30) 
+        self.cam_no = check_cameras()[-1]
+        
+        self.setup_camera()
 
         # Inıt interpreter
         if 'edgetpu' in model_path_tflite: 
@@ -396,14 +392,11 @@ class PrayerApp(Gtk.Window):
         
         # Initial ref image and sound
         self.update_reference_image( self.current_position )
-        worker = threading.Thread(target=self.play_sound_and_update_ui, args=(self.current_position, self.next_position, ))  
-        worker.daemon = True
-        worker.start()
-        self.worker_threads.append(worker)
+        threading.Thread(target=self.play_sound_and_update_ui, args=(self.current_position, self.next_position, ), daemon=True)  
+
             
         # Start the camera capture in a new thread
-        camera_thread = threading.Thread(target=self.capture_camera )
-        camera_thread.daemon = True
+        camera_thread = threading.Thread(target=self.capture_camera, daemon=True )
         camera_thread.start()    
             
     def capture_camera(self,):
@@ -413,14 +406,14 @@ class PrayerApp(Gtk.Window):
         ## Start looping 
         while self.cap.isOpened():
             ret, image = self.cap.read()
-            self.counter2 += 1
+            self.frame_counter += 1
              # Initialize time variable   
-            if not ret:
+            if not ret or self.frame_counter % 2 == 0:
                 continue
             try: 
-                detection_result = get_landmarks_infrance(image.copy(), landmarker)
+                detection_result = get_landmarks_infrance(image, landmarker)
                 # draw landmarks on image           
-                if detection_result:
+                if detection_result :
                     annotated_image, position_notes = self.handle_detection_result(detection_result, image )
                     # Write current position name on frame.
                     annotated_image = self.display_position_on_image(annotated_image, self.detected_position, self.next_position, position_notes=position_notes)
@@ -444,7 +437,7 @@ class PrayerApp(Gtk.Window):
                     
             # Update annotated image 
             self.update_cam_image(annotated_image )
-                                  
+                
     def should_change_position(self):
          # Fixed the method name and simplified the logic for clarity
         is_different_position = self.detected_position != self.current_position
@@ -473,26 +466,12 @@ class PrayerApp(Gtk.Window):
         # Set a timer to execute the end_of_duration callback after the duration
         GLib.timeout_add_seconds(duration, self.end_of_duration, next_position)
         
-    def cancel_threads(self):
-        # Cancel all threads except for the camera_thread
-        for thread in self.worker_threads:
-            if thread.is_alive():
-                # Set a stop flag that your thread functions need to check regularly
-                thread.stop = True
-                thread.join()  # Wait for the thread to finish its work
-
-        # Clean up the list of worker threads
-        self.worker_threads = [t for t in self.worker_threads if not t.is_alive()]
-
-
     def end_of_duration(self, next_position):
         # This function will be called by GLib after 'duration' seconds
         print('Duration ended, stopping playback')
         self.player.set_state(Gst.State.NULL)
         self.update_reference_image(next_position)
-        self.sound_end_check = True
-        self.cancel_threads()
-        
+        self.sound_end_check = True        
         return False  # Return False to stop the timer from repeating
     
     def on_eos(self, bus, msg):
@@ -516,16 +495,10 @@ class PrayerApp(Gtk.Window):
             duration = stop - start  # Calculate duration based on start and stop
              
             # Play the sound segment in a separate thread to avoid blocking
-            w1 = threading.Thread(target=self.play_sound_segment, args=(start, duration, next_position ))
-            w1.daemon = True
-            w1.start()
-            self.worker_threads.append(w1)
-            
+            threading.Thread(target=self.play_sound_segment, args=(start, duration, next_position ), daemon=True).start()
             # Start updating message images in a separate thread
-            w2= threading.Thread(target=self.update_message_images, args=(start, stop))
-            w2.daemon = True
-            w2.start()
-            self.worker_threads.append(w2)
+            threading.Thread(target=self.update_message_images, args=(start, stop), daemon=True)
+
         
         except Exception as e:
             print('Hata: ', e)
@@ -589,7 +562,7 @@ class PrayerApp(Gtk.Window):
         return False
      
     def handle_detection_result(self, detection_result, image ):
-        annotated_image = draw_landmarks_on_image(image.copy(), detection_result)
+        annotated_image = draw_landmarks_on_image(image, detection_result)
         yzmodel_result = ""
         frame_rate = self.calculate_frame_rate() 
         if detection_result.pose_landmarks:
@@ -597,14 +570,15 @@ class PrayerApp(Gtk.Window):
             bbox = get_bounding_box(landmarks, image)
             start = time.monotonic()
             # get current position
-            self.detected_position, is_standing = check_position(image.copy(), landmarks, self.gender)
+            self.detected_position, is_standing = check_position(image, landmarks, self.gender)
             
             # crop image in order to classify position
             croped_image = image[bbox[1]:bbox[3], bbox[0]:bbox[2]]
                           
             det_time = (time.monotonic() - start) * 1000
             start = time.monotonic()
-            if self.counter2 % 10 == 0:
+            
+            if self.sound_end_check:
                 if 'edgetpu' in model_path_tflite:
                     clasfy_result, conf = get_class_of_position_int8(croped_image, 
                                 self.interpreter, self.input_details, self.output_details)
@@ -626,7 +600,7 @@ class PrayerApp(Gtk.Window):
                 pass
                 # print(f'Det time - pose:{det_time} -  tflite-edge: {(time.monotonic() - start ) * 1000} Tread #:{num_uncompleted_threads} FPS: {frame_rate}')
             
-        position_notes  = f"Dp:{self.detected_position}: {self.counter}/{len(self.current_sequence)}-{yzmodel_result}- FPS:{frame_rate}"
+        position_notes  = f"Dp:{self.detected_position}: {self.counter}/{len(self.current_sequence)}-{yzmodel_result}- FPS:{frame_rate:.0f}"
         return annotated_image, position_notes
     
     def display_position_on_image(self, image, detected_position, next_position, position_notes=None):
@@ -664,6 +638,8 @@ class PrayerApp(Gtk.Window):
         if hasattr(self, 'cap'):
             if self.cap is None or not self.cap.isOpened():
                 self.cap = cv2.VideoCapture(self.cam_no)  # Assuming 0 is the id for your primary camera
+                self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.target_width)
+                self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.target_height)
                 if not self.cap.isOpened():
                     print("Error: Kamera Açılamadı")
                     return

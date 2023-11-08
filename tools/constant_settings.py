@@ -1,5 +1,21 @@
 
-from tools.prayer_positions import PrayerPositions
+
+class PrayerPositions:
+    ALL = 0
+    NIYET = 1
+    NIYET_S = 11
+    TEKBIR = 2
+    KIYAM = 3
+    KIYAM2 = 33 
+    KIYAM3 = 33 
+    RUKU = 4
+    SECDE = 5
+    KADE = 6
+    KADE2 = 66
+    KADE3 = 666
+    KADE_S = 6666
+    RLSELAM = 7
+    SON = 8
 
 # Constants
 # Define thresholds as dictionaries
@@ -68,7 +84,7 @@ position_names = {
     PrayerPositions.SON: "Bitti",    
 }
 
-sabah_manazi_timeline = {
+sabah_manazi_soundline = {
     PrayerPositions.NIYET: (0,2),
     PrayerPositions.TEKBIR: (2, 6),
     PrayerPositions.KIYAM:(7, 2*60 + 36),

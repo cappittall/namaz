@@ -212,7 +212,7 @@ def is_tekbir(image, landmarks, gender="k"):
         # distance left wrist to referance position (for women chest area, for men stomach)
     distance_between_hands = calculate_distance(landmarks[21], landmarks[22])
     
-    is_distance_to_tekbir = distance_left < thresholds_s and  distance_right < thresholds_s
+    is_distance_to_tekbir = distance_left < thresholds_m and  distance_right < thresholds_m
     is_distance_between_hands = distance_between_hands > thresholds_m
     is_left_right_not_crosed = landmarks[20].x  <  landmarks[19].x
     
@@ -477,11 +477,11 @@ def load_squences(prayer_time):
     
     print( 'Vakit : ', prayer_time )
     sequences = {
-        'Sabah': (sabah_namazi_2, sabah_dualari, sabah_manazi_timeline),
-        'Öğle': (oglen_namazi_4, oglen_dualari, sabah_manazi_timeline), 
-        'İkindi': (ikindi_namazi_4, ikindi_dualari, sabah_manazi_timeline),
-        'Akşam': (aksam_namazi_3, aksam_dualari, sabah_manazi_timeline),
-        'Yatsı': (yatsi_namazi_4, yatsi_dualari, sabah_manazi_timeline)
+        'Sabah': (sabah_namazi_2, sabah_dualari, sabah_manazi_soundline),
+        'Öğle': (oglen_namazi_4, oglen_dualari, sabah_manazi_soundline), 
+        'İkindi': (ikindi_namazi_4, ikindi_dualari, sabah_manazi_soundline),
+        'Akşam': (aksam_namazi_3, aksam_dualari, sabah_manazi_soundline),
+        'Yatsı': (yatsi_namazi_4, yatsi_dualari, sabah_manazi_soundline)
     }
 
     current_sequence, current_prayer_sounds, timeline = sequences.get(

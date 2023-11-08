@@ -479,17 +479,17 @@ class PrayerApp(Gtk.Window):
             last_time = current_time 
             num_uncompleted_threads = threading.active_count() - 1 
             try: 
-                detection_result = get_landmarks_infrance(image.copy(), landmarker)
+                detection_result = get_landmarks_infrance(image, landmarker)
                 # draw landmarks on image           
                 if detection_result:
-                    annotated_image = draw_landmarks_on_image(image.copy(), detection_result)
+                    annotated_image = draw_landmarks_on_image(image, detection_result)
                     
                     if detection_result.pose_landmarks:
                         landmarks = detection_result.pose_landmarks[0]
                         bbox = get_bounding_box(landmarks, image)
                         start = time.monotonic()
                         # get current position
-                        self.current_position, is_standing = check_position(image.copy(), landmarks, self.gender)
+                        self.current_position, is_standing = check_position(image, landmarks, self.gender)
                         
                         # crop image in order to classify position
                         croped_image = image[bbox[1]:bbox[3], bbox[0]:bbox[2]]
