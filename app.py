@@ -108,6 +108,7 @@ class PrayerApp(Gtk.Window):
         self.namaz_timeline = None
         self.current_prayer_sounds = None
         
+        self.worker_threads = []
         self.debug = False
         # Resize the images
         self.screen = Gdk.Display.get_default().get_monitor(0).get_geometry()    
@@ -392,11 +393,14 @@ class PrayerApp(Gtk.Window):
         
         # Initial ref image and sound
         self.update_reference_image( self.current_position )
-        threading.Thread(target=self.play_sound_and_update_ui, args=(self.current_position, self.next_position, ), daemon=True)  
-
+        worker = threading.Thread(target=self.play_sound_and_update_ui, args=(self.current_position, self.next_position, ))  
+        worker.daemon = True
+        worker.start()
+        self.worker_threads.append(worker)
             
         # Start the camera capture in a new thread
-        camera_thread = threading.Thread(target=self.capture_camera, daemon=True )
+        camera_thread = threading.Thread(target=self.capture_camera )
+        camera_thread.daemon = True
         camera_thread.start()    
             
     def capture_camera(self,):
@@ -495,10 +499,16 @@ class PrayerApp(Gtk.Window):
             duration = stop - start  # Calculate duration based on start and stop
              
             # Play the sound segment in a separate thread to avoid blocking
-            threading.Thread(target=self.play_sound_segment, args=(start, duration, next_position ), daemon=True).start()
+            w1 = threading.Thread(target=self.play_sound_segment, args=(start, duration, next_position ))
+            w1.daemon = True
+            w1.start()
+            self.worker_threads.append(w1)
+            
             # Start updating message images in a separate thread
-            threading.Thread(target=self.update_message_images, args=(start, stop), daemon=True)
-
+            w2= threading.Thread(target=self.update_message_images, args=(start, stop))
+            w2.daemon = True
+            w2.start()
+            self.worker_threads.append(w2)
         
         except Exception as e:
             print('Hata: ', e)

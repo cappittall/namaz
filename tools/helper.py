@@ -3,7 +3,6 @@ import math
 import time
 import cv2
 import numpy as np
-
 from .constant_settings import * 
 
 from mediapipe.framework.formats import landmark_pb2
@@ -488,3 +487,4 @@ def load_squences(prayer_time):
                                 prayer_time, (None, None, None))
     
     return current_sequence, current_prayer_sounds, timeline
+
