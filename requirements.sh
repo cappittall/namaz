@@ -14,10 +14,18 @@ sudo gtk-update-icon-cache /usr/share/icons/Yaru/
 
 
 
+
 pip3 install wheel
 
 conda install -c conda-forge gtk3
 conda install -c conda-forge pygobject
+
+conda install -c conda-forge gstreamer
+conda install -c conda-forge pygobject
+conda install -c conda-forge gst-python
+
+export GI_TYPELIB_PATH=$CONDA_PREFIX/lib/girepository-1.0
+
 export LD_LIBRARY_PATH=/usr/lib:$LD_LIBRARY_PATH
 
 
