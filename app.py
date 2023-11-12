@@ -15,15 +15,16 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GdkPixbuf, GLib
 
-""" try:
+try:
     # Try to import and initialize GStreamer
     gi.require_version('Gst', '1.0')
     from gi.repository import Gst
     Gst.init(None)
     use_gstreamer = True
 except ImportError:
-    print('Error') """
+    print('Error') 
     # Fallback to using Pygame if GStreamer is not available
+    
 import pygame
 pygame.init()
 use_gstreamer = False
@@ -131,7 +132,7 @@ class PrayerApp(Gtk.Window):
         self.target_width, self.target_height = int(self.screen.width * 0.95 / 2), int(self.screen.height * 0.8)  
         
         # Initialize camera
-        self.cam_no = check_cameras()[-1]
+        self.cam_no = 0 # check_cameras()[-1]
         
         self.setup_camera()
 
