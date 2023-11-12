@@ -15,17 +15,18 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GdkPixbuf, GLib
 
-try:
+""" try:
     # Try to import and initialize GStreamer
     gi.require_version('Gst', '1.0')
     from gi.repository import Gst
     Gst.init(None)
     use_gstreamer = True
 except ImportError:
+    print('Error') """
     # Fallback to using Pygame if GStreamer is not available
-    import pygame
-    pygame.init()
-    use_gstreamer = False
+import pygame
+pygame.init()
+use_gstreamer = False
 
 Gtk.init()
 
