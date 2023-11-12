@@ -13,28 +13,13 @@ import mediapipe as mp
 # initialize Gtk
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, Gdk, GdkPixbuf, GLib
-
-try:
-    # Try to import and initialize GStreamer
-    gi.require_version('Gst', '1.0')
-    from gi.repository import Gst
-    Gst.init(None)
-    use_gstreamer = True
-except ImportError:
-    # Fallback to using Pygame if GStreamer is not available
-    import pygame
-    pygame.init()
-    use_gstreamer = False
-
+gi.require_version('Gst', '1.0')
+from gi.repository import Gtk, Gdk, GdkPixbuf, GLib, Gst
 Gtk.init()
+Gst.init(None)
 
 from tflite_runtime.interpreter import load_delegate, Interpreter
 # from tensorflow.lite.python.interpreter import Interpreter, load_delegate
-import logging
-
-logging.basicConfig(filename='app.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-
 
 """ models = glob.glob('models/all/*.tflite')
 for i, m in enumerate(models):
@@ -395,18 +380,16 @@ class PrayerApp(Gtk.Window):
         # sound initialize 
         relative_path = self.current_prayer_sounds.get(PrayerPositions.ALL, None)
         absolute_path = os.path.abspath(relative_path)
-        # use gstreramer if available
-        if use_gstreamer: 
-            self.player = Gst.ElementFactory.make("playbin", "player")
-            self.player.set_property('uri', 'file://' + absolute_path)
-            
-            # Connect to the bus for EOS and ERROR messages
-            bus = self.player.get_bus()
-            bus.add_signal_watch()
-            bus.connect("message::eos", self.on_eos)
-            bus.connect("message::error", self.on_error)
-        else: 
-            pygame.mixer.music.load(absolute_path)
+
+        
+        self.player = Gst.ElementFactory.make("playbin", "player")
+        self.player.set_property('uri', 'file://' + absolute_path)
+        
+        # Connect to the bus for EOS and ERROR messages
+        bus = self.player.get_bus()
+        bus.add_signal_watch()
+        bus.connect("message::eos", self.on_eos)
+        bus.connect("message::error", self.on_error)
         
         # Initial ref image and sound
         self.update_reference_image( self.current_position )
@@ -468,40 +451,29 @@ class PrayerApp(Gtk.Window):
             self.sound_end_check and self.detected_position is not None
                               
     def play_sound_segment(self, start, duration, next_position):
-        if use_gstreamer:
-            # Prepare the player for seeking
-            self.player.set_state(Gst.State.PAUSED)
-            self.player.get_state(Gst.CLOCK_TIME_NONE)  # Wait for the state to change
-            
-            # Seek to the desired start position and play for the duration
-            seek_event = Gst.Event.new_seek(
-                1.0, Gst.Format.TIME,
-                Gst.SeekFlags.FLUSH | Gst.SeekFlags.ACCURATE,
-                Gst.SeekType.SET, start * Gst.SECOND,
-                Gst.SeekType.SET, (start + duration) * Gst.SECOND
-            )
-            self.player.send_event(seek_event)
-            # Start playing after seeking
-            self.player.set_state(Gst.State.PLAYING)
-        else:
-            try:
-                pygame.mixer.music.play(start = start)    
-            except Exception as e:
-                print('Hata , ', e )
+        # Prepare the player for seeking
+        self.player.set_state(Gst.State.PAUSED)
+        self.player.get_state(Gst.CLOCK_TIME_NONE)  # Wait for the state to change
         
+        # Seek to the desired start position and play for the duration
+        seek_event = Gst.Event.new_seek(
+            1.0, Gst.Format.TIME,
+            Gst.SeekFlags.FLUSH | Gst.SeekFlags.ACCURATE,
+            Gst.SeekType.SET, start * Gst.SECOND,
+            Gst.SeekType.SET, (start + duration) * Gst.SECOND
+        )
+        self.player.send_event(seek_event)
         
+        # Start playing after seeking
+        self.player.set_state(Gst.State.PLAYING)
 
         # Set a timer to execute the end_of_duration callback after the duration
         GLib.timeout_add_seconds(duration, self.end_of_duration, next_position)
         
     def end_of_duration(self, next_position):
-        if use_gstreamer:
-            # This function will be called by GLib after 'duration' seconds
-            print('Duration ended, stopping playback')
-            self.player.set_state(Gst.State.NULL)
-        else:
-            pygame.mixer.music.stop()
-            
+        # This function will be called by GLib after 'duration' seconds
+        print('Duration ended, stopping playback')
+        self.player.set_state(Gst.State.NULL)
         self.update_reference_image(next_position)
         self.sound_end_check = True        
         return False  # Return False to stop the timer from repeating
@@ -543,22 +515,18 @@ class PrayerApp(Gtk.Window):
             traceback.print_exc()
 
     
-    def update_cam_image(self, img): 
-        logging.debug("update_cam_image called")
+    def update_cam_image(self, img):     
         # Resize the image before passing to the UI thread
         resized_annotated_image = resize_image_to_fixed(img, self.target_width, self.target_height) 
-        logging.debug("Image resized")
+        
         # Schedule the UI update on the main thread without blocking the camera thread
         GLib.idle_add(self._update_cam_image, resized_annotated_image)
         
     def _update_cam_image(self, img):
-        logging.debug("_update_cam_image called")
         # Convert to GdkPixbuf in the main thread to be thread-safe
         pixbuf = self.cv2_to_gdkpixbuf(img)
-        logging.debug("Image converted to GdkPixbuf")
         # Update the GTK Image or any UI component
         self.annotated_img_frame.set_from_pixbuf(pixbuf)
-        logging.debug("Image set to GTK component")
         return False
     
     def cv2_to_gdkpixbuf(self, cv2_image):
@@ -636,10 +604,13 @@ class PrayerApp(Gtk.Window):
                         self.detected_position = PrayerPositions.SECDE
                     
                     yzmodel_result = f'{clasfy_result} {int(conf*100)}%' 
-                    # args = {'args': f'{clasfy_result} {int(conf*100)}%' }
+                    args = {'args': f'{clasfy_result} {int(conf*100)}%' }
                     # threading.Thread(target=write_inspection_on_image, args=(croped_image,args,)).start()
-                    
-        position_notes = f"{self.detected_position}: {self.counter}/{len(self.current_sequence)}-YZ:{yzmodel_result}-FPS:{frame_rate:.0f}"
+            if self.debug:
+                pass
+                # print(f'Det time - pose:{det_time} -  tflite-edge: {(time.monotonic() - start ) * 1000} Tread #:{num_uncompleted_threads} FPS: {frame_rate}')
+            
+        position_notes  = f"Dp:{self.detected_position}: {self.counter}/{len(self.current_sequence)}-{yzmodel_result}- FPS:{frame_rate:.0f}"
         return annotated_image, position_notes
     
     def display_position_on_image(self, image, detected_position, next_position, position_notes=None):
@@ -673,25 +644,20 @@ class PrayerApp(Gtk.Window):
         self.last_time = current_time
         return frame_rate
     
-    def setup_camera(self):
-        if not hasattr(self, 'cap') or not self.cap.isOpened():
+    def setup_camera(self,):
+        if hasattr(self, 'cap'):
+            if self.cap is None or not self.cap.isOpened():
+                self.cap = cv2.VideoCapture(self.cam_no)  # Assuming 0 is the id for your primary camera
+                self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.target_width)
+                self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.target_height)
+                if not self.cap.isOpened():
+                    print("Error: Kamera Açılamadı")
+                    return
+        else:
             self.cap = cv2.VideoCapture(self.cam_no)
             if not self.cap.isOpened():
-                logging.error("Error: Camera could not be opened.")
-                return
-
-            # Setting camera resolution
-            if not self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.target_width):
-                logging.warning(f"Warning: Unable to set frame width to {self.target_width}.")
-            if not self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.target_height):
-                logging.warning(f"Warning: Unable to set frame height to {self.target_height}.")
-            self.cap.set(cv2.CAP_PROP_FPS, 10)
-
-
-    def release_camera(self):
-        if hasattr(self, 'cap') and self.cap.isOpened():
-            self.cap.release()
-            logging.info("Camera released.")    
+                print("Error: Kamera açılamadı.")
+                return        
     
     def on_back_clicked(self, button, page):        
         self.close_cap_and_sound()
@@ -703,14 +669,12 @@ class PrayerApp(Gtk.Window):
                     
     def close_cap_and_sound(self):
         # Stop any playing sounds with GStreamer
-        if use_gstreamer:
-            if hasattr(self, 'player') and self.player:
-                self.player.set_state(Gst.State.NULL)  # Stop playing and set state to NULL
-        else:
-            pygame.mixer.music.stop()
-            
+        if hasattr(self, 'player') and self.player:
+            self.player.set_state(Gst.State.NULL)  # Stop playing and set state to NULL
+        
         # Release OpenCV capture
-        self.release_camera()
+        if hasattr(self, 'cap') and self.cap:
+            self.cap.release()
 
     def on_exit_clicked(self, button=None):  # button might be None if called without a button event
         self.close_cap_and_sound()
