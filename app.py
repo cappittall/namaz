@@ -33,7 +33,7 @@ from tflite_runtime.interpreter import load_delegate, Interpreter
 # from tensorflow.lite.python.interpreter import Interpreter, load_delegate
 import logging
 
-logging.basicConfig(filename='app.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+# logging.basicConfig(filename='app.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 """ models = glob.glob('models/all/*.tflite')

@@ -12,8 +12,6 @@ sudo apt install -y librsvg2-common
 sudo update-mime-database /usr/share/mime
 sudo gtk-update-icon-cache /usr/share/icons/Yaru/
 
-
-
 pip3 install wheel
 
 conda install -c conda-forge gtk3
