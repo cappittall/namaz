@@ -4,6 +4,7 @@
 export PATH="/home/mendel/.conda/envs/namaz/bin:$PATH"
 export GI_TYPELIB_PATH=$CONDA_PREFIX/lib/girepository-1.0
 export LD_LIBRARY_PATH=/usr/lib:$LD_LIBRARY_PATH
+
 #change to the folder
 cd /home/linaro/namaz/
 sudo git pull
