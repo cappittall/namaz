@@ -2,28 +2,12 @@
 
 # Manually set PATH to use the namaz environment
 export PATH="/home/mendel/.conda/envs/namaz/bin:$PATH"
-
+export GI_TYPELIB_PATH=$CONDA_PREFIX/lib/girepository-1.0
+export LD_LIBRARY_PATH=/usr/lib:$LD_LIBRARY_PATH
 #change to the folder
-cd /home/mendel/namaz
+cd /home/linaro/namaz/
 sudo git pull
 
 # Run Python application
 # Attempt to run the first Python script
-python /home/mendel/namaz/app.py
-
-# Check if it was successful
-if [ $? -eq 0 ]; then
-  echo "First script executed successfully."
-else
-  echo "First script failed. Attempting second script."
-  conda activate namaz2
-  # Attempt to run the second Python script
-  python ~/Documents/namaz/app.py
-
-  # Check if the second script was successful
-  if [ $? -eq 0 ]; then
-    echo "Second script executed successfully."
-  else
-    echo "Both scripts failed."
-  fi
-fi
+python /home/linaro/namaz/app.py

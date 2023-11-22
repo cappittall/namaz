@@ -10,7 +10,7 @@ from tools.constant_settings import *
 from tools.helper import *
 import mediapipe as mp
 
-# initialize Gtk
+# initialize Gtk...Çok ilginç 
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GdkPixbuf, GLib
@@ -126,13 +126,14 @@ class PrayerApp(Gtk.Window):
         self.current_prayer_sounds = None
         
         self.worker_threads = []
+        self.position_change_event = threading.Event()
         self.debug = False
         # Resize the images
         self.screen = Gdk.Display.get_default().get_monitor(0).get_geometry()    
-        self.target_width, self.target_height = int(self.screen.width * 0.95 / 2), int(self.screen.height * 0.8)  
+        self.target_width, self.target_height = int(self.screen.width * 0.95 / 2), int(self.screen.height * 0.7)  
         
         # Initialize camera
-        self.cam_no = 0 # check_cameras()[-1]
+        self.cam_no = 10 # check_cameras()[-1]
         
         self.setup_camera()
 
@@ -447,6 +448,9 @@ class PrayerApp(Gtk.Window):
                 traceback.print_exc()
                                                  
             if self.should_change_position():
+                 # Wait until it's safe to proceed, which is when the event is set
+                self.position_change_event.wait()
+                self.position_change_event.clear()  # Clear the event for the next time
                 print('Posizyon check e girdi... ', self.sound_end_check, threading.active_count() - 1 )
                 self.sound_end_check = False
                 self.current_position = self.next_position
@@ -466,8 +470,13 @@ class PrayerApp(Gtk.Window):
         is_different_position = self.detected_position != self.current_position
         is_correct_next_position = compare_positions(self.next_position, self.detected_position)
         is_final_position = self.next_position == PrayerPositions.RLSELAM
-        return (is_different_position and is_correct_next_position or is_final_position) and \
-            self.sound_end_check and self.detected_position is not None
+        """ return (is_different_position and is_correct_next_position or is_final_position) and \
+            self.sound_end_check and self.detected_position is not None """
+        if (is_different_position and is_correct_next_position or is_final_position) and self.sound_end_check and self.detected_position is not None:
+            self.position_change_event.set()  # Signal that position should change
+            return True
+        else:
+            return False
                               
     def play_sound_segment(self, start, duration, next_position):
         if use_gstreamer:
@@ -529,15 +538,11 @@ class PrayerApp(Gtk.Window):
             duration = stop - start  # Calculate duration based on start and stop
              
             # Play the sound segment in a separate thread to avoid blocking
-            w1 = threading.Thread(target=self.play_sound_segment, args=(start, duration, next_position ))
-            w1.daemon = True
-            w1.start()
+            w1 = threading.Thread(target=self.play_sound_segment, args=(start, duration, next_position )).start()
             self.worker_threads.append(w1)
             
             # Start updating message images in a separate thread
-            w2= threading.Thread(target=self.update_message_images, args=(start, stop))
-            w2.daemon = True
-            w2.start()
+            w2= threading.Thread(target=self.update_message_images, args=(start, stop)).start()
             self.worker_threads.append(w2)
         
         except Exception as e:
@@ -548,7 +553,7 @@ class PrayerApp(Gtk.Window):
     def update_cam_image(self, img): 
         logging.debug("update_cam_image called")
         # Resize the image before passing to the UI thread
-        resized_annotated_image = resize_image_to_fixed(img, self.target_width, self.target_height) 
+        resized_annotated_image =img # resize_image_to_fixed(img, self.target_width, self.target_height) 
         logging.debug("Image resized")
         # Schedule the UI update on the main thread without blocking the camera thread
         GLib.idle_add(self._update_cam_image, resized_annotated_image)
@@ -573,7 +578,7 @@ class PrayerApp(Gtk.Window):
     
     def update_reference_image(self, next_sequence):
         reference_image = self.get_reference_image(next_sequence)
-        resized_reference_image = resize_image_to_fixed(reference_image, self.target_width, self.target_height)
+        resized_reference_image = reference_image #resize_image_to_fixed(reference_image, self.target_width, self.target_height)
         GLib.idle_add(self._update_reference_image, resized_reference_image )
                  
     def _update_reference_image(self, img):
