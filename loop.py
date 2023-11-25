@@ -83,7 +83,7 @@ class CameraLoop():
         self.target_height = int(self.height * 0.80 )
         
         # Initialize camera
-        self.cam_no = 0 # check_cameras()[-1]
+        self.cam_no = 10 # check_cameras()[-1]
         
         # Inıt interpreter
         if 'edgetpu' in model_path_tflite: 
