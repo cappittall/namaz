@@ -11,9 +11,9 @@ screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 screen_width, screen_height = screen.get_size()
 
 # Colors and Fonts
-GREEN = (0, 255, 0)
-YELLOW = (255, 255, 0)
-BLACK = (0, 0, 0)
+GREEN = (255,255,255)
+YELLOW = (0,0,0) # (255, 255, 0)
+BLACK = (255,255,255) #  Yazılar beyaz (0, 0, 0)
 FONT = pygame.font.Font(None, 36)
 
 # Button dimensions and positions

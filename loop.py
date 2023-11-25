@@ -83,7 +83,7 @@ class CameraLoop():
         self.target_height = int(self.height * 0.80 )
         
         # Initialize camera
-        self.cam_no = 10 # check_cameras()[-1]
+        self.cam_no = check_cameras()[-1]
         
         # Inıt interpreter
         if 'edgetpu' in model_path_tflite: 
@@ -252,7 +252,7 @@ class CameraLoop():
     def update_cam_image(self, img): 
         logging.debug("update_cam_image called")
         try:
-            yellow_color = (0, 255, 255)
+            yellow_color = (48,48,48)  # (0, 255, 255)
             border_thickness = 10
             
             img = resize_image_to_fixed(img, self.target_width, self.target_height)

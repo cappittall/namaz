@@ -460,7 +460,7 @@ def preprocess_image(image_path, target_size=(224, 224)):
     
     return image
 
-def check_cameras(max_range=3):
+def check_cameras(max_range=11):
     available_cams = []
     for i in range(max_range):
         cap = cv2.VideoCapture(i)
