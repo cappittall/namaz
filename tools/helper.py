@@ -1,3 +1,4 @@
+import os
 import logging
 import math
 import time
@@ -14,6 +15,19 @@ labels = ['kade', 'kiyam', 'ruku', 'secde']
 
 DEBUG=True
 
+def clear_directory(folder_path):
+    try:
+        for filename in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, filename)
+            try:
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    os.rmdir(file_path)
+            except Exception as e:
+                print(f"Failed to delete {file_path}. Reason: {e}")
+    except Exception as e:
+        print(f"Failed to delete Reason: {e}")
 def draw_landmarks_on_image(rgb_image, detection_result ):
         
     pose_landmarks_list = detection_result.pose_landmarks
@@ -473,8 +487,6 @@ def compare_positions(position1, position2):
 
 
 def load_squences(prayer_time):
-    
-    print( 'Vakit : ', prayer_time )
     sequences = {
         'Sabah': (sabah_namazi_2, sabah_dualari, sabah_manazi_soundline),
         'Öğle': (oglen_namazi_4, oglen_dualari, sabah_manazi_soundline), 

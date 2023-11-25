@@ -1,5 +1,3 @@
-
-
 class PrayerPositions:
     ALL = 0
     NIYET = 1

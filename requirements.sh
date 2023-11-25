@@ -14,12 +14,15 @@ sudo gtk-update-icon-cache /usr/share/icons/Yaru/
 
 pip3 install wheel
 
-conda install -c conda-forge gtk3
-conda install -c conda-forge pygobject
-sudo apt install --reinstall gst-plugins-base -y
+# conda install -c conda-forge gtk3
+# conda install -c conda-forge pygobject
+# sudo apt install --reinstall gst-plugins-base -y
 
-conda install -c conda-forge gstreamer
-conda install -c conda-forge gst-python
+# conda install -c conda-forge gstreamer
+# conda install -c conda-forge gst-python
+conda install -c conda-forge pygame opencv-python 
+
+
 
 export GI_TYPELIB_PATH=$CONDA_PREFIX/lib/girepository-1.0
 
