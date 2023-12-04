@@ -161,19 +161,28 @@ class CameraLoop():
                 # Initialize time variable   
             if not ret or self.frame_counter % 2 == 0:
                 continue
-            try: 
-                detection_result = get_landmarks_infrance(image, landmarker)
-                # draw landmarks on image           
-                if detection_result :
-                    annotated_image, position_notes = self.handle_detection_result(detection_result, image )
-                    # Write current position name on frame.
-                    annotated_image = self.display_position_on_image(annotated_image, self.detected_position, self.next_position, position_notes=position_notes)
-                else: annotated_image = image
+            # In order to increase frame 
+            if self.sound_end_check:
+                try: 
+                    detection_result = get_landmarks_infrance(image, landmarker)
+                    # draw landmarks on image           
+                    if detection_result :
+                        annotated_image, position_notes = self.handle_detection_result(detection_result, image )
+                        # Write current position name on frame.                        
+                        if self.debug:
+                            annotated_image = self.display_position_on_image(annotated_image, self.detected_position, position_notes=position_notes)
+                    else: annotated_image = image
+                    next_poz = position_names.get(self.next_position, "")
+                    self.update_next_message(next_poz)
+                except Exception as e:
+                    print("Exception: ", e)
+                    traceback.print_exc()
+            else:
+                annotated_image = image  # Directly use the captured image without annotations
+                position_notes = ""
                 
-            except Exception as e:
-                print("Exception: ", e)
-                traceback.print_exc()
-                                                    
+    
+                 
             if self.should_change_position():
                     # Wait until it's safe to proceed, which is when the event is set
                 self.position_change_event.wait()
@@ -299,7 +308,8 @@ class CameraLoop():
         return False
                 
     def handle_detection_result(self, detection_result, image ):
-        annotated_image = draw_landmarks_on_image(image, detection_result)
+        if self.debug:
+            image = draw_landmarks_on_image(image, detection_result)
         yzmodel_result = ""
         frame_rate = self.calculate_frame_rate() 
         if detection_result.pose_landmarks:
@@ -335,18 +345,18 @@ class CameraLoop():
                     # threading.Thread(target=write_inspection_on_image, args=(croped_image,args,)).start()
                     
         position_notes = f"{self.detected_position}: {self.counter}/{len(self.current_sequence)}-YZ:{yzmodel_result}-FPS:{frame_rate:.0f}"
-        return annotated_image, position_notes
+        return image, position_notes
     
-    def display_position_on_image(self, image, detected_position, next_position, position_notes=None):
+    def display_position_on_image(self, image, detected_position, position_notes=None):
+        
         # Get the position name from the mapping
         position_name = position_names.get(detected_position, "")
-        next_poz = position_names.get(next_position, "")
+        
         # Put the detected position name on the image
-        if self.debug:
-            h,w,_ = image.shape 
-            cv2.putText(image, f"{position_name}", (5, h-50), cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 255, 0), 4)
-            cv2.putText(image, position_notes, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5 , (0, 0, 255), 4)
-        self.update_next_message(next_poz)
+        h,w,_ = image.shape 
+        cv2.putText(image, f"{position_name}", (5, h-50), cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 255, 0), 4)
+        cv2.putText(image, position_notes, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5 , (0, 0, 255), 4)
+        
         return image
                     
     def update_next_message(self, new_text):
@@ -354,7 +364,7 @@ class CameraLoop():
         img[:] = (0, 0, 0)
         try:
             font=cv2.FONT_HERSHEY_SIMPLEX
-            text = 'SONRAKI- ' +  new_text.upper()
+            text = 'Simdi - ' +  new_text.upper()
             # Calculate text size and position to center it
             text_size = cv2.getTextSize(text, font, 1, thickness=1)[0]
             text_x = (img.shape[1] - text_size[0]) // 2
@@ -387,7 +397,7 @@ class CameraLoop():
                 logging.warning(f"Warning: Unable to set frame width to {self.target_width}.")
             if not self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.target_height):
                 logging.warning(f"Warning: Unable to set frame height to {self.target_height}.")
-            self.cap.set(cv2.CAP_PROP_FPS, 10)
+            
 
 
     def release_camera(self):
