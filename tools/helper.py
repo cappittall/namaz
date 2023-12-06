@@ -225,7 +225,7 @@ def is_tekbir(image, landmarks, gender="k"):
         # distance left wrist to referance position (for women chest area, for men stomach)
     distance_between_hands = calculate_distance(landmarks[21], landmarks[22])
     
-    is_distance_to_tekbir = distance_left < thresholds_m and  distance_right < thresholds_m
+    is_distance_to_tekbir = distance_left < thresholds_xl and  distance_right < thresholds_xl
     is_distance_between_hands = distance_between_hands > thresholds_m
     is_left_right_not_crosed = landmarks[20].x  <  landmarks[19].x
     
