@@ -10,6 +10,7 @@ from tools.helper import *
 
 import pygame
 from pygame.locals import *
+
 pygame.init()
 
 # Convert an OpenCV image to Pygame surface
@@ -159,7 +160,7 @@ class CameraLoop():
             ret, image = self.cap.read()
             self.frame_counter += 1
                 # Initialize time variable   
-            if not ret or self.frame_counter % 2 == 0:
+            if not ret or self.frame_counter % 10 == 0:
                 continue
             # In order to increase frame 
             if self.sound_end_check:
@@ -227,12 +228,13 @@ class CameraLoop():
                             
     def play_sound_segment(self, start, duration, next_position):
         try:
-            pygame.mixer.music.play(start = start)    
+            pygame.mixer.music.play(start = start)
+            time.sleep(duration)
+            pygame.mixer.music.stop()
+            self.update_reference_image(next_position) 
         except Exception as e:
             print('Hata , ', e )
-        time.sleep(duration)
-        pygame.mixer.music.stop()
-        self.update_reference_image(next_position)
+
         self.sound_end_check = True        
 
     def play_sound_and_update_ui(self, current_position, next_position):
